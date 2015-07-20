@@ -37,6 +37,9 @@ void Widget::initWidget()
     ui->screenLayout->addWidget(imageGLView);
 
     ui->stopButton->setEnabled(false);
+    ui->captureButton->setEnabled(false);
+    ui->resetColorButton->setEnabled(false);
+    ui->setBoardAreaButton->setEnabled(false);
 
     connect(ui->startButton, SIGNAL(clicked()),
                              SLOT(slotCameraStart()));
@@ -44,6 +47,10 @@ void Widget::initWidget()
                             SLOT(slotCameraStop()));
     connect(ui->captureButton, SIGNAL(clicked()),
                                SLOT(slotCameraCapture()));
+    connect(ui->resetColorButton, SIGNAL(clicked()),
+            imageGLView, SLOT(slotResetColor()));
+    connect(ui->setBoardAreaButton, SIGNAL(clicked()),
+            imageGLView, SLOT(slotSetBoardArea()));
 
     connect(this, SIGNAL(signalFrameReady(QPixmap)),
             imageGLView, SLOT(slotImageLoad(QPixmap)));
@@ -87,6 +94,9 @@ void Widget::slotThreadStart()
        captureThread->start();
        ui->startButton->setEnabled(false);
        ui->stopButton->setEnabled(true);
+       ui->captureButton->setEnabled(true);
+       ui->resetColorButton->setEnabled(true);
+       ui->setBoardAreaButton->setEnabled(true);
    }
 }
 

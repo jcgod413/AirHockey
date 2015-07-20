@@ -5,6 +5,7 @@
 #include <QPainter>
 #include <QMouseEvent>
 #include <QColor>
+#include "ahr.h"
 
 class ImageGLView : public QGLWidget
 {
@@ -25,7 +26,11 @@ private:
 
     int mousePosX;
     int mousePosY;
+    int boardAreaClick;
+
     bool isMouseClicked;
+    bool isBoardArea;
+    bool isRectangleReady;
 
     int redMax;
     int redMin;
@@ -33,6 +38,15 @@ private:
     int greenMin;
     int blueMax;
     int blueMin;
+
+    int leftTopX;
+    int leftTopY;
+    int leftBottomX;
+    int leftBottomY;
+    int rightTopX;
+    int rightTopY;
+    int rightBottomX;
+    int rightBottomY;
 
     QPixmap frameImage;
 
@@ -43,6 +57,8 @@ private:
 
 public slots:
     void slotImageLoad(QPixmap);
+    void slotResetColor();
+    void slotSetBoardArea();
 };
 
 #endif // IMAGEGLVIEW_H

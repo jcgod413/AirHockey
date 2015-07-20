@@ -19,6 +19,7 @@ SOURCES += main.cpp\
 
 HEADERS  += widget.h \
     imageglview.h \
-    capturethread.h
+    capturethread.h \
+    ahr.h
 
 FORMS    += widget.ui

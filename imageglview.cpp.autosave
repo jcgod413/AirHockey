@@ -130,7 +130,6 @@ void ImageGLView::mousePressEvent(QMouseEvent *event)
     isMouseClicked = true;
 
     if( isBoardArea )   {
-        qDebug("%d    %d %d", boardAreaClick, x, y);
         switch(boardAreaClick)  {
         case LEFT_TOP:
             leftTopX = x;
