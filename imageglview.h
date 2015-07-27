@@ -55,8 +55,7 @@ private:
 
     QPixmap frameImage;
 
-    int getBoundStartX(int y);
-    int getBoundEndX(int y);
+    void getBoundX(int y, int &startX, int &endX);
 
     virtual void paintEvent(QPaintEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);

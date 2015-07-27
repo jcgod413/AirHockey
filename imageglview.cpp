@@ -94,10 +94,11 @@ void ImageGLView::paintEvent(QPaintEvent *event)
                     : rightBottomY;
      
     for(int i=boundStartY; i<boundEndY; i++)    {
-        int boundStartX = getBoundStartX(i);
-        int boundEndX = getBoundEndX(i);
-//        int boundStartX = 0;
-//        int boundEndX = SCREEN_WIDTH;
+        int boundStartX;
+        int boundEndX;
+
+        getBoundX(i, boundStartX, boundEndX);
+
         if( boundStartX < 0 || boundEndX < 0
             || boundEndX > SCREEN_WIDTH )
             continue;
@@ -256,30 +257,40 @@ void ImageGLView::slotSetBoardArea()
 
 
 /**
- * @brief ImageGLView::getBoundStartX
- * 기울기 구해서 y값에 해당하는 x값을 return
+ * @brief ImageGLView::getBoundX
  * @param y
- * @return
+ * @param startX
+ * @param endX
  */
-int ImageGLView::getBoundStartX(int y)
+void ImageGLView::getBoundX(int y, int &startX, int &endX)
 {
-    // If the result is not changed, it returns -1
-    int result = RETURN_ERROR;
     // y 절편
     int y_intercept;
 
-    /* 왼쪽 변이 한개 있는 case
+    /* 왼쪽 변이 한개 있는 case = 오른쪽 변이 세개 있는 case
      * 1. Left Top Point가 Right Top Point보다 y값이 작고,
      * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
      */
     if( leftTopY <= rightTopY && leftBottomY >= rightBottomY )    {
         // y = ax+b  ->  y절편 = y-ax
         y_intercept = leftTopY-(leftTopX*gradientD);
+        startX = (y - y_intercept) / gradientD;
 
-        result = (y - y_intercept) / gradientD;
+        if( y < rightTopY )  {
+            y_intercept = rightTopY-(rightTopX*gradientA);
+            endX = (y - y_intercept) / gradientA;
+        }
+        else if( y < rightBottomY )  {
+            y_intercept = rightTopY-(rightTopX*gradientB);
+            endX = (y - y_intercept) / gradientB;
+        }
+        else    {
+            y_intercept = rightBottomY-(rightBottomX*gradientC);
+            endX = (y - y_intercept) / gradientC;
+        }
     }
 
-    /* 왼쪽 변이 두개 있는 case
+    /* 왼쪽 변이 두개 있는 case = 오른쪽 변이 두개 있는 case
      * 1. Left Top Point가 Right Top Point보다 y값이 작고,
      * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
      * 2. Left Top Point가 Right Top Point보다 y값이 크고,
@@ -288,114 +299,61 @@ int ImageGLView::getBoundStartX(int y)
     if( leftTopY < rightTopY && leftBottomY < rightBottomY )    {
         if( y < leftBottomY )   {
             y_intercept = leftBottomY-(leftBottomX*gradientD);
-            result = (y - y_intercept) / gradientD;
+            startX = (y - y_intercept) / gradientD;
         }
         else    {
             y_intercept = leftBottomY-(leftBottomX*gradientC);
-            result = (y - y_intercept) / gradientC;
+            startX = (y - y_intercept) / gradientC;
+        }
+
+        if( y < rightTopY )   {
+            y_intercept = rightTopY-(rightTopX*gradientA);
+            endX = (y - y_intercept) / gradientA;
+        }
+        else    {
+            y_intercept = rightTopY-(rightTopX*gradientB);
+            endX = (y - y_intercept) / gradientB;
         }
     }
     if( leftTopY > rightTopY && leftBottomY > rightBottomY )    {
         if( y < leftTopY )  {
             y_intercept = leftTopY-(leftTopX*gradientA);
-            result = (y - y_intercept) / gradientA;
+            startX = (y - y_intercept) / gradientA;
         }
         else    {
             y_intercept = leftTopY-(leftTopX*gradientD);
-            result = (y - y_intercept) / gradientD;
+            startX = (y - y_intercept) / gradientD;
+        }
+
+        if( y < rightBottomY )  {
+            y_intercept = rightBottomY-(rightBottomX*gradientB);
+            endX = (y - y_intercept) / gradientB;
+        }
+        else    {
+            y_intercept = rightBottomY-(rightBottomX*gradientC);
+            endX = (y - y_intercept) / gradientC;
         }
     }
 
-    /* 왼쪽 변이 세개 있는 case
+    /* 왼쪽 변이 세개 있는 case = 오른쪽 변이 한개 있는 case
      * 1. Left Top Point가 Right Top Point보다 y값이 크고,
      * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
      */
     if( leftTopY > rightTopY && leftBottomY < rightBottomY )    {
         if( y < leftTopY )  {
             y_intercept = leftTopY-(leftTopX*gradientA);
-            result = (y - y_intercept) / gradientA;
+            startX = (y - y_intercept) / gradientA;
         }
         else if( y < leftBottomY )  {
             y_intercept = leftTopY-(leftTopX*gradientD);
-            result = (y - y_intercept) / gradientD;
+            startX = (y - y_intercept) / gradientD;
         }
         else    {
             y_intercept = leftBottomY-(leftBottomX*gradientC);
-            result = (y - y_intercept) / gradientC;
+            startX = (y - y_intercept) / gradientC;
         }
-    }
 
-    return result;
-}
-
-/**
- * @brief ImageGLView::getBoundEndX
- * @param y
- * @return
- */
-int ImageGLView::getBoundEndX(int y)
-{
-    // If the result is not changed, it returns -1
-    int result = RETURN_ERROR;
-    // y 절편
-    int y_intercept;
-
-    /* 오른쪽 변이 한개 있는 case
-     * 1. Left Top Point가 Right Top Point보다 y값이 크고,
-     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
-     */
-    if( leftTopY >= rightTopY && leftBottomY <= rightBottomY )    {
-        // y = ax+b  ->  y절편 = y-ax
         y_intercept = rightTopY-(rightTopX*gradientB);
-
-        result = (y - y_intercept) / gradientB;
+        endX = (y - y_intercept) / gradientB;
     }
-
-    /* 오른쪽 변이 두개 있는 case
-     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
-     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
-     * 2. Left Top Point가 Right Top Point보다 y값이 크고,
-     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
-     */
-    if( leftTopY < rightTopY && leftBottomY < rightBottomY )    {
-        if( y < rightTopY )   {
-            y_intercept = rightTopY-(rightTopX*gradientA);
-            result = (y - y_intercept) / gradientA;
-        }
-        else    {
-            y_intercept = rightTopY-(rightTopX*gradientB);
-            result = (y - y_intercept) / gradientB;
-        }
-    }
-    if( leftTopY > rightTopY && leftBottomY > rightBottomY )    {
-        if( y < rightBottomY )  {
-            y_intercept = rightBottomY-(rightBottomX*gradientB);
-            result = (y - y_intercept) / gradientB;
-        }
-        else    {
-            y_intercept = rightBottomY-(rightBottomX*gradientC);
-            result = (y - y_intercept) / gradientC;
-        }
-    }
-
-    /* 오른쪽 변이 세개 있는 case
-     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
-     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
-     */
-    if( leftTopY < rightTopY && leftBottomY > rightBottomY )    {
-        if( y < rightTopY )  {
-            y_intercept = rightTopY-(rightTopX*gradientA);
-            result = (y - y_intercept) / gradientA;
-        }
-        else if( y < rightBottomY )  {
-            y_intercept = rightTopY-(rightTopX*gradientB);
-            result = (y - y_intercept) / gradientB;
-        }
-        else    {
-            y_intercept = rightBottomY-(rightBottomX*gradientC);
-            result = (y - y_intercept) / gradientC;
-        }
-    }
-
-    return result;
 }
