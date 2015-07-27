@@ -48,7 +48,15 @@ private:
     int rightBottomX;
     int rightBottomY;
 
+    double gradientA;   // Left Top Point와 Right Top Point의 기울기
+    double gradientB;   // Right Top Point와 Right Bottom Point의 기울기
+    double gradientC;   // Right Bottom Point와 Left Bottom Point의 기울기
+    double gradientD;   // Right Bottom Point와 Left Bottom Point의 기울기
+
     QPixmap frameImage;
+
+    int getBoundStartX(int y);
+    int getBoundEndX(int y);
 
     virtual void paintEvent(QPaintEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);

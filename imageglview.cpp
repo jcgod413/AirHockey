@@ -86,18 +86,37 @@ void ImageGLView::paintEvent(QPaintEvent *event)
     unsigned char *imageData = image.bits();
     int toleranceBand = 5;
 
-    for(int i=0; i<len; i+=4)   {
-        int blue = imageData[i+0];
-        int green = imageData[i+1];
-        int red = imageData[i+2];
+    int boundStartY = (leftTopY<rightTopY)
+                     ? leftTopY
+                     : rightTopY;
+    int boundEndY = (leftBottomY>rightBottomY)
+                    ? leftBottomY
+                    : rightBottomY;
+     
+    for(int i=boundStartY; i<boundEndY; i++)    {
+        int boundStartX = getBoundStartX(i);
+        int boundEndX = getBoundEndX(i);
+//        int boundStartX = 0;
+//        int boundEndX = SCREEN_WIDTH;
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
 
-        if( (red <= redMax+toleranceBand && red >= redMin-toleranceBand) &&
-            (green <= greenMax+toleranceBand && green >= greenMin-toleranceBand) &&
-            (blue <= blueMax+toleranceBand && blue >= blueMin-toleranceBand) )
-        {
-            imageData[i+0] = 0;
-            imageData[i+1] = 0;
-            imageData[i+2] = 255;
+        
+        for(int j=boundStartX; j<boundEndX; j++)   {
+            QColor maskColor = QColor::fromRgb(image.pixel(j, i));
+            int red   = maskColor.red();
+            int green = maskColor.green();
+            int blue  = maskColor.blue();
+            
+            if( (red <= redMax+toleranceBand && red >= redMin-toleranceBand) &&
+                (green <= greenMax+toleranceBand && green >= greenMin-toleranceBand) &&
+                (blue <= blueMax+toleranceBand && blue >= blueMin-toleranceBand) )
+            {
+//                qDebug("색칠");
+                maskColor.setRgb(255, 0, 0, 255);
+                image.setPixel(j, i, maskColor.value());
+            }
         }
     }
 
@@ -153,6 +172,21 @@ void ImageGLView::mousePressEvent(QMouseEvent *event)
         if( ++boardAreaClick == END )   {
             isRectangleReady = true;
             isBoardArea = false;
+
+            // Left Top Point와 Right Top Point의 기울기
+            gradientA = (double)(rightTopY-leftTopY)
+                       / (double)(rightTopX-leftTopX);
+            // Right Top Point와 Right Bottom Point의 기울기
+            gradientB = (double)(rightBottomY-rightTopY)
+                       / (double)(rightBottomX-rightTopX);
+            // Right Bottom Point와 Left Bottom Point의 기울기
+            gradientC = (double)(leftBottomY-rightBottomY)
+                       / (double)(leftBottomX-rightBottomX);
+            // Left Bottom Point와 Left Top Point의 기울기
+            gradientD = (double)(leftBottomY-leftTopY)
+                       / (double)(leftBottomX-leftTopX);
+
+            qDebug("%f", gradientD);
         }
     }
 }
@@ -174,6 +208,9 @@ void ImageGLView::mouseReleaseEvent(QMouseEvent *event)
  */
 void ImageGLView::mouseMoveEvent(QMouseEvent *event)
 {
+    if( event->x() < 0 || event->y() < 0 )
+        return;
+
     if( isMouseClicked )    {
         mousePosX = event->x();
         mousePosY = event->y();
@@ -215,4 +252,150 @@ void ImageGLView::slotSetBoardArea()
     isRectangleReady = false;
 
     boardAreaClick = 0;
+}
+
+
+/**
+ * @brief ImageGLView::getBoundStartX
+ * 기울기 구해서 y값에 해당하는 x값을 return
+ * @param y
+ * @return
+ */
+int ImageGLView::getBoundStartX(int y)
+{
+    // If the result is not changed, it returns -1
+    int result = RETURN_ERROR;
+    // y 절편
+    int y_intercept;
+
+    /* 왼쪽 변이 한개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
+     */
+    if( leftTopY <= rightTopY && leftBottomY >= rightBottomY )    {
+        // y = ax+b  ->  y절편 = y-ax
+        y_intercept = leftTopY-(leftTopX*gradientD);
+
+        result = (y - y_intercept) / gradientD;
+    }
+
+    /* 왼쪽 변이 두개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
+     * 2. Left Top Point가 Right Top Point보다 y값이 크고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
+     */
+    if( leftTopY < rightTopY && leftBottomY < rightBottomY )    {
+        if( y < leftBottomY )   {
+            y_intercept = leftBottomY-(leftBottomX*gradientD);
+            result = (y - y_intercept) / gradientD;
+        }
+        else    {
+            y_intercept = leftBottomY-(leftBottomX*gradientC);
+            result = (y - y_intercept) / gradientC;
+        }
+    }
+    if( leftTopY > rightTopY && leftBottomY > rightBottomY )    {
+        if( y < leftTopY )  {
+            y_intercept = leftTopY-(leftTopX*gradientA);
+            result = (y - y_intercept) / gradientA;
+        }
+        else    {
+            y_intercept = leftTopY-(leftTopX*gradientD);
+            result = (y - y_intercept) / gradientD;
+        }
+    }
+
+    /* 왼쪽 변이 세개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 크고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
+     */
+    if( leftTopY > rightTopY && leftBottomY < rightBottomY )    {
+        if( y < leftTopY )  {
+            y_intercept = leftTopY-(leftTopX*gradientA);
+            result = (y - y_intercept) / gradientA;
+        }
+        else if( y < leftBottomY )  {
+            y_intercept = leftTopY-(leftTopX*gradientD);
+            result = (y - y_intercept) / gradientD;
+        }
+        else    {
+            y_intercept = leftBottomY-(leftBottomX*gradientC);
+            result = (y - y_intercept) / gradientC;
+        }
+    }
+
+    return result;
+}
+
+/**
+ * @brief ImageGLView::getBoundEndX
+ * @param y
+ * @return
+ */
+int ImageGLView::getBoundEndX(int y)
+{
+    // If the result is not changed, it returns -1
+    int result = RETURN_ERROR;
+    // y 절편
+    int y_intercept;
+
+    /* 오른쪽 변이 한개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 크고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
+     */
+    if( leftTopY >= rightTopY && leftBottomY <= rightBottomY )    {
+        // y = ax+b  ->  y절편 = y-ax
+        y_intercept = rightTopY-(rightTopX*gradientB);
+
+        result = (y - y_intercept) / gradientB;
+    }
+
+    /* 오른쪽 변이 두개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
+     * 2. Left Top Point가 Right Top Point보다 y값이 크고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
+     */
+    if( leftTopY < rightTopY && leftBottomY < rightBottomY )    {
+        if( y < rightTopY )   {
+            y_intercept = rightTopY-(rightTopX*gradientA);
+            result = (y - y_intercept) / gradientA;
+        }
+        else    {
+            y_intercept = rightTopY-(rightTopX*gradientB);
+            result = (y - y_intercept) / gradientB;
+        }
+    }
+    if( leftTopY > rightTopY && leftBottomY > rightBottomY )    {
+        if( y < rightBottomY )  {
+            y_intercept = rightBottomY-(rightBottomX*gradientB);
+            result = (y - y_intercept) / gradientB;
+        }
+        else    {
+            y_intercept = rightBottomY-(rightBottomX*gradientC);
+            result = (y - y_intercept) / gradientC;
+        }
+    }
+
+    /* 오른쪽 변이 세개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
+     */
+    if( leftTopY < rightTopY && leftBottomY > rightBottomY )    {
+        if( y < rightTopY )  {
+            y_intercept = rightTopY-(rightTopX*gradientA);
+            result = (y - y_intercept) / gradientA;
+        }
+        else if( y < rightBottomY )  {
+            y_intercept = rightTopY-(rightTopX*gradientB);
+            result = (y - y_intercept) / gradientB;
+        }
+        else    {
+            y_intercept = rightBottomY-(rightBottomX*gradientC);
+            result = (y - y_intercept) / gradientC;
+        }
+    }
+
+    return result;
 }
