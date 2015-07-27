@@ -24,7 +24,7 @@ ImageGLView::ImageGLView(QWidget *parent) :
     blueMax(0),
     blueMin(255)
 {
-
+    setMouseTracking(true);
 }
 
 /**
@@ -114,7 +114,6 @@ void ImageGLView::paintEvent(QPaintEvent *event)
                 (green <= greenMax+toleranceBand && green >= greenMin-toleranceBand) &&
                 (blue <= blueMax+toleranceBand && blue >= blueMin-toleranceBand) )
             {
-//                qDebug("색칠");
                 maskColor.setRgb(255, 0, 0, 255);
                 image.setPixel(j, i, maskColor.value());
             }
@@ -123,7 +122,35 @@ void ImageGLView::paintEvent(QPaintEvent *event)
 
     painter.drawImage(rectDrawArea, image);
 
-    if( isRectangleReady )  {
+    if( !isRectangleReady ) {
+        if( isBoardArea )    {
+            painter.drawEllipse(QPoint(mousePosX, mousePosY), 5, 5);
+        }
+
+        switch( boardAreaClick )    {
+        case RIGHT_TOP :
+            painter.drawLine(QPoint(leftTopX, leftTopY),
+                             QPoint(mousePosX, mousePosY));
+            break;
+        case RIGHT_BOTTOM :
+            painter.drawLine(QPoint(leftTopX, leftTopY),
+                             QPoint(rightTopX, rightTopY));
+            painter.drawLine(QPoint(rightTopX, rightTopY),
+                             QPoint(mousePosX, mousePosY));
+            break;
+        case LEFT_BOTTOM :
+            painter.drawLine(QPoint(leftTopX, leftTopY),
+                             QPoint(rightTopX, rightTopY));
+            painter.drawLine(QPoint(rightTopX, rightTopY),
+                             QPoint(rightBottomX, rightBottomY));
+            painter.drawLine(QPoint(leftTopX, leftTopY),
+                             QPoint(mousePosX, mousePosY));
+            painter.drawLine(QPoint(rightBottomX, rightBottomY),
+                             QPoint(mousePosX, mousePosY));
+            break;
+        }
+    }
+    else    {
         painter.drawLine(QPoint(leftTopX, leftTopY),
                          QPoint(rightTopX, rightTopY));
         painter.drawLine(QPoint(leftTopX, leftTopY),
@@ -150,7 +177,6 @@ void ImageGLView::mousePressEvent(QMouseEvent *event)
     isMouseClicked = true;
 
     if( isBoardArea )   {
-        qDebug("%d    %d %d", boardAreaClick, x, y);
         switch(boardAreaClick)  {
         case LEFT_TOP:
             leftTopX = x;
@@ -212,10 +238,10 @@ void ImageGLView::mouseMoveEvent(QMouseEvent *event)
     if( event->x() < 0 || event->y() < 0 )
         return;
 
-    if( isMouseClicked )    {
-        mousePosX = event->x();
-        mousePosY = event->y();
+    mousePosX = event->x();
+    mousePosY = event->y();
 
+    if( isMouseClicked )    {
         QColor maskColor = QColor::fromRgb(frameImage.toImage().pixel(mousePosX, mousePosY));
 
         int red = maskColor.red();
@@ -230,7 +256,6 @@ void ImageGLView::mouseMoveEvent(QMouseEvent *event)
         blueMin  = (blueMin>blue) ? blue : blueMin;
     }
 
-    qDebug("%d %d    %d %d    %d %d", redMax, redMin, greenMax, greenMin, blueMax, blueMin);
 }
 
 /**
@@ -252,7 +277,12 @@ void ImageGLView::slotSetBoardArea()
     isBoardArea = true;
     isRectangleReady = false;
 
+    this->hasFocus();
+
     boardAreaClick = 0;
+
+    leftTopX = leftTopY = leftBottomX = leftBottomY = 0;
+    rightTopX = rightTopY = rightBottomX = rightBottomY = 0;
 }
 
 

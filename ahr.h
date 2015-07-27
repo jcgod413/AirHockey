@@ -9,8 +9,8 @@
 enum BoardPosition  {
     LEFT_TOP,
     RIGHT_TOP,
-    LEFT_BOTTOM,
     RIGHT_BOTTOM,
+    LEFT_BOTTOM,
     END
 };
 
