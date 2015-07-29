@@ -51,6 +51,11 @@ void Widget::initWidget()
             imageGLView, SLOT(slotResetColor()));
     connect(ui->setBoardAreaButton, SIGNAL(clicked()),
             imageGLView, SLOT(slotSetBoardArea()));
+    connect(ui->erodeSpinBox, SIGNAL(valueChanged(int)),
+            imageGLView, SLOT(slotErodeNumChanged(int)));
+    connect(ui->dilateSpinBox, SIGNAL(valueChanged(int)),
+            imageGLView, SLOT(slotDilateNumChanged(int)));
+
 
     connect(this, SIGNAL(signalFrameReady(QPixmap)),
             imageGLView, SLOT(slotImageLoad(QPixmap)));

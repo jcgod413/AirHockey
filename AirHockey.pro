@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         widget.cpp \
     imageglview.cpp \
-    capturethread.cpp
+    capturethread.cpp \
+    imageprocessing.cpp
 
 HEADERS  += widget.h \
     imageglview.h \
     capturethread.h \
-    ahr.h
+    ahr.h \
+    imageprocessing.h
 
 FORMS    += widget.ui

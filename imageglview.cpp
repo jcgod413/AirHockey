@@ -5,6 +5,7 @@
  */
 ImageGLView::ImageGLView(QWidget *parent) :
     QGLWidget(QGLFormat(QGL::SampleBuffers), parent),
+    imageProcessing(new ImageProcessing),
     isMouseClicked(false),
     isBoardArea(false),
     isRectangleReady(false),
@@ -22,7 +23,9 @@ ImageGLView::ImageGLView(QWidget *parent) :
     greenMax(0),
     greenMin(255),
     blueMax(0),
-    blueMin(255)
+    blueMin(255),
+    erodeNum(0),
+    dilateNum(0)
 {
     setMouseTracking(true);
 }
@@ -82,8 +85,8 @@ void ImageGLView::paintEvent(QPaintEvent *event)
     QImage image = frameImage.toImage();
     QRect rectDrawArea(startX, startY, endX-startX, endY-startY);
 
-    int len = 640*480*4;
-    unsigned char *imageData = image.bits();
+//    int len = 640*480*4;
+//    unsigned char *imageData = image.bits();
     int toleranceBand = 5;
 
     int boundStartY = (leftTopY<rightTopY)
@@ -386,4 +389,22 @@ void ImageGLView::getBoundX(int y, int &startX, int &endX)
         y_intercept = rightTopY-(rightTopX*gradientB);
         endX = (y - y_intercept) / gradientB;
     }
+}
+
+/**
+ * @brief ImageGLView::slotErodeNumChanged
+ * @param _erodeNum
+ */
+void ImageGLView::slotErodeNumChanged(int _erodeNum)
+{
+    erodeNum = _erodeNum;
+}
+
+/**
+ * @brief ImageGLView::slotDilateNumChanged
+ * @param _dilateNum
+ */
+void ImageGLView::slotDilateNumChanged(int _dilateNum)
+{
+    dilateNum = _dilateNum;
 }
