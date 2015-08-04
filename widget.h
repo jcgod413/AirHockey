@@ -7,6 +7,7 @@
 #include <QCameraImageCapture>
 #include <QTimer>
 #include "imageglview.h"
+#include "imageprocessing.h"
 #include "capturethread.h"
 
 namespace Ui {
@@ -34,6 +35,7 @@ private:
     QList<QByteArray> camDevNameLists;
 
     ImageGLView *imageGLView;
+    ImageProcessing *imageProcessing;
     CaptureThread *captureThread;
 
 

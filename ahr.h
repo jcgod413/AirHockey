@@ -11,7 +11,8 @@ enum BoardPosition  {
     RIGHT_TOP,
     RIGHT_BOTTOM,
     LEFT_BOTTOM,
-    END
+    END,
+    RESET_BOARD_AREA
 };
 
 #endif // AHR

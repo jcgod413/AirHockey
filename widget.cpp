@@ -8,6 +8,7 @@
 Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget),
+    imageProcessing(new ImageProcessing),
     camera(0),
     imageCapture(0)
 {
@@ -48,7 +49,7 @@ void Widget::initWidget()
     connect(ui->captureButton, SIGNAL(clicked()),
                                SLOT(slotCameraCapture()));
     connect(ui->resetColorButton, SIGNAL(clicked()),
-            imageGLView, SLOT(slotResetColor()));
+            imageProcessing, SLOT(slotResetMaskColor()));
     connect(ui->setBoardAreaButton, SIGNAL(clicked()),
             imageGLView, SLOT(slotSetBoardArea()));
     connect(ui->erodeSpinBox, SIGNAL(valueChanged(int)),
@@ -56,9 +57,15 @@ void Widget::initWidget()
     connect(ui->dilateSpinBox, SIGNAL(valueChanged(int)),
             imageGLView, SLOT(slotDilateNumChanged(int)));
 
+    connect(imageGLView, SIGNAL(signalDraggedImage(int,int)),
+            imageProcessing, SLOT(slotDraggedImage(int,int)));
+    connect(imageGLView, SIGNAL(signalBoardAreaPoint(int,int,int)),
+            imageProcessing, SLOT(slotBoardAreaPoint(int,int,int)));
 
-    connect(this, SIGNAL(signalFrameReady(QPixmap)),
-            imageGLView, SLOT(slotImageLoad(QPixmap)));
+    connect(imageProcessing, SIGNAL(signalBoardArea(bool)),
+            imageGLView, SLOT(slotBoardArea(bool)));
+    connect(imageProcessing, SIGNAL(signalRectangleReady(bool)),
+            imageGLView, SLOT(slotRectangleReady(bool)));
 }
 
 /**
@@ -200,6 +207,9 @@ void Widget::slotCaptureLoad()
 {
     QRect rect(0, 0, viewFinder->width(), viewFinder->height());
     QPixmap captureImage = viewFinder->grab(rect).scaled(640, 480);
+    QImage frameImage = captureImage.toImage();
 
-    emit signalFrameReady(captureImage);
+    imageProcessing->loadRawImage(frameImage);
+
+    imageGLView->imageLoad(imageProcessing->getThresholdImage());
 }

@@ -6,7 +6,6 @@
 #include <QMouseEvent>
 #include <QColor>
 #include "ahr.h"
-#include "imageprocessing.h"
 
 class ImageGLView : public QGLWidget
 {
@@ -15,10 +14,9 @@ class ImageGLView : public QGLWidget
 public:
     explicit ImageGLView(QWidget *parent = 0);
     ~ImageGLView();
+    void imageLoad(QImage);
 
 private:
-    ImageProcessing imageProcessing;
-
     int startX;
     int startY;
     int endX;
@@ -51,31 +49,30 @@ private:
     int rightBottomX;
     int rightBottomY;
 
-    double gradientA;   // Left Top Point와 Right Top Point의 기울기
-    double gradientB;   // Right Top Point와 Right Bottom Point의 기울기
-    double gradientC;   // Right Bottom Point와 Left Bottom Point의 기울기
-    double gradientD;   // Right Bottom Point와 Left Bottom Point의 기울기
-
     int erodeNum;
+    int dilateNum;
 
-    QPixmap frameImage;
+    QImage frameImage;
 
     int dir[8][2] = { {-1,-1}, {0, -1}, {1, -1}, {1, 0},
                       {1, 1},  {0, 1}, {-1, 1}, {-1, 0}};
-
-    void getBoundX(int y, int &startX, int &endX);
 
     virtual void paintEvent(QPaintEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
     virtual void mousePressEvent(QMouseEvent *event);
     virtual void mouseReleaseEvent(QMouseEvent *event);
 
+signals:
+    void signalDraggedImage(int, int);
+    void signalBoardAreaPoint(int, int, int);
+
 public slots:
-    void slotImageLoad(QPixmap);
-    void slotResetColor();
     void slotSetBoardArea();
     void slotErodeNumChanged(int);
     void slotDilateNumChanged(int);
+
+    void slotRectangleReady(bool);
+    void slotBoardArea(bool);
 };
 
 #endif // IMAGEGLVIEW_H

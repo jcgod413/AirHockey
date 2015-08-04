@@ -1,6 +1,23 @@
 #include "imageprocessing.h"
 
-ImageProcessing::ImageProcessing(QObject *parent) : QObject(parent)
+ImageProcessing::ImageProcessing(QObject *parent) :
+    QObject(parent),
+    redMax(0),
+    greenMax(0),
+    blueMax(0),
+    redMin(255),
+    greenMin(255),
+    blueMin(255),
+    leftTopX(0),
+    leftTopY(0),
+    leftBottomX(0),
+    leftBottomY(0),
+    rightTopX(0),
+    rightTopY(0),
+    rightBottomX(0),
+    rightBottomY(0),
+    toleranceBand(5),
+    isBoardAreaReady(false)
 {
 
 }
@@ -9,6 +26,150 @@ ImageProcessing::~ImageProcessing()
 {
 
 }
+
+void ImageProcessing::loadRawImage(QImage rawImage)
+{
+    this->rawImage = rawImage;
+}
+
+QImage ImageProcessing::getThresholdImage()
+{
+    int toleranceBand = 5;
+
+    int boundStartY = (leftTopY<rightTopY)
+                     ? leftTopY
+                     : rightTopY;
+    int boundEndY = (leftBottomY>rightBottomY)
+                    ? leftBottomY
+                    : rightBottomY;
+
+    if( isBoardAreaReady )  {
+        for(int i=boundStartY; i<boundEndY; i++)    {
+            int boundStartX;
+            int boundEndX;
+
+            getBoundX(i, boundStartX, boundEndX);
+
+            if( boundStartX < 0 || boundEndX < 0
+                || boundEndX > SCREEN_WIDTH )
+                continue;
+
+            for(int j=boundStartX; j<boundEndX; j++)   {
+                QColor maskColor = QColor::fromRgb(rawImage.pixel(j, i));
+                int red   = maskColor.red();
+                int green = maskColor.green();
+                int blue  = maskColor.blue();
+
+                if( (red <= redMax+toleranceBand && red >= redMin-toleranceBand) &&
+                    (green <= greenMax+toleranceBand && green >= greenMin-toleranceBand) &&
+                    (blue <= blueMax+toleranceBand && blue >= blueMin-toleranceBand) )
+                {
+                    maskColor.setRgb(255, 0, 0, 255);
+                    rawImage.setPixel(j, i, maskColor.value());
+                }
+            }
+        }
+    }
+
+    return rawImage;
+}
+
+void ImageProcessing::getBoundX(int y, int &startX, int &endX)
+{
+    // y 절편
+    int y_intercept;
+
+    /* 왼쪽 변이 한개 있는 case = 오른쪽 변이 세개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
+     */
+    if( leftTopY <= rightTopY && leftBottomY >= rightBottomY )    {
+        // y = ax+b  ->  y절편 = y-ax
+        y_intercept = leftTopY-(leftTopX*gradientD);
+        startX = (y - y_intercept) / gradientD;
+
+        if( y < rightTopY )  {
+            y_intercept = rightTopY-(rightTopX*gradientA);
+            endX = (y - y_intercept) / gradientA;
+        }
+        else if( y < rightBottomY )  {
+            y_intercept = rightTopY-(rightTopX*gradientB);
+            endX = (y - y_intercept) / gradientB;
+        }
+        else    {
+            y_intercept = rightBottomY-(rightBottomX*gradientC);
+            endX = (y - y_intercept) / gradientC;
+        }
+    }
+
+    /* 왼쪽 변이 두개 있는 case = 오른쪽 변이 두개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 작고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
+     * 2. Left Top Point가 Right Top Point보다 y값이 크고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
+     */
+    if( leftTopY < rightTopY && leftBottomY < rightBottomY )    {
+        if( y < leftBottomY )   {
+            y_intercept = leftBottomY-(leftBottomX*gradientD);
+            startX = (y - y_intercept) / gradientD;
+        }
+        else    {
+            y_intercept = leftBottomY-(leftBottomX*gradientC);
+            startX = (y - y_intercept) / gradientC;
+        }
+
+        if( y < rightTopY )   {
+            y_intercept = rightTopY-(rightTopX*gradientA);
+            endX = (y - y_intercept) / gradientA;
+        }
+        else    {
+            y_intercept = rightTopY-(rightTopX*gradientB);
+            endX = (y - y_intercept) / gradientB;
+        }
+    }
+    if( leftTopY > rightTopY && leftBottomY > rightBottomY )    {
+        if( y < leftTopY )  {
+            y_intercept = leftTopY-(leftTopX*gradientA);
+            startX = (y - y_intercept) / gradientA;
+        }
+        else    {
+            y_intercept = leftTopY-(leftTopX*gradientD);
+            startX = (y - y_intercept) / gradientD;
+        }
+
+        if( y < rightBottomY )  {
+            y_intercept = rightBottomY-(rightBottomX*gradientB);
+            endX = (y - y_intercept) / gradientB;
+        }
+        else    {
+            y_intercept = rightBottomY-(rightBottomX*gradientC);
+            endX = (y - y_intercept) / gradientC;
+        }
+    }
+
+    /* 왼쪽 변이 세개 있는 case = 오른쪽 변이 한개 있는 case
+     * 1. Left Top Point가 Right Top Point보다 y값이 크고,
+     * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
+     */
+    if( leftTopY > rightTopY && leftBottomY < rightBottomY )    {
+        if( y < leftTopY )  {
+            y_intercept = leftTopY-(leftTopX*gradientA);
+            startX = (y - y_intercept) / gradientA;
+        }
+        else if( y < leftBottomY )  {
+            y_intercept = leftTopY-(leftTopX*gradientD);
+            startX = (y - y_intercept) / gradientD;
+        }
+        else    {
+            y_intercept = leftBottomY-(leftBottomX*gradientC);
+            startX = (y - y_intercept) / gradientC;
+        }
+
+        y_intercept = rightTopY-(rightTopX*gradientB);
+        endX = (y - y_intercept) / gradientB;
+    }
+}
+
 
 void ImageProcessing::erodeImage(QImage &sourceImage)
 {
@@ -36,6 +197,75 @@ void ImageProcessing::erodeImage(QImage &sourceImage)
         }
     }
 }
+
+void ImageProcessing::slotDraggedImage(int x, int y)
+{
+    QColor maskColor = QColor::fromRgb(rawImage.pixel(x, y));
+
+    int red = maskColor.red();
+    int green = maskColor.green();
+    int blue = maskColor.blue();
+
+    redMax   = (redMax<red) ? red : redMax;
+    redMin   = (redMin>red) ? red : redMin;
+    greenMax = (greenMax<green) ? green : greenMax;
+    greenMin = (greenMin>green) ? green : greenMin;
+    blueMax  = (blueMax<blue) ? blue : blueMax;
+    blueMin  = (blueMin>blue) ? blue : blueMin;
+}
+
+void ImageProcessing::slotResetMaskColor()
+{
+    redMax = greenMax = blueMax = 0;
+    redMin = greenMin = blueMin = 255;
+}
+
+void ImageProcessing::slotBoardAreaPoint(int boardAreaClick, int x, int y)
+{
+    switch(boardAreaClick)  {
+    case LEFT_TOP:
+        leftTopX = x;
+        leftTopY = y;
+        break;
+    case RIGHT_TOP:
+        rightTopX = x;
+        rightTopY = y;
+        break;
+    case RIGHT_BOTTOM:
+        rightBottomX = x;
+        rightBottomY = y;
+        break;
+    case LEFT_BOTTOM:
+        leftBottomX = x;
+        leftBottomY = y;
+
+        // Left Top Point와 Right Top Point의 기울기
+        gradientA = (double)(rightTopY-leftTopY)
+                   / (double)(rightTopX-leftTopX);
+        // Right Top Point와 Right Bottom Point의 기울기
+        gradientB = (double)(rightBottomY-rightTopY)
+                   / (double)(rightBottomX-rightTopX);
+        // Right Bottom Point와 Left Bottom Point의 기울기
+        gradientC = (double)(leftBottomY-rightBottomY)
+                   / (double)(leftBottomX-rightBottomX);
+        // Left Bottom Point와 Left Top Point의 기울기
+        gradientD = (double)(leftBottomY-leftTopY)
+                   / (double)(leftBottomX-leftTopX);
+
+        isBoardAreaReady = true;
+
+        emit signalRectangleReady(true);
+        emit signalBoardArea(false);
+
+        break;
+    case RESET_BOARD_AREA:   // 경기장 영역 클릭
+        leftTopX = leftTopY = leftBottomX = leftBottomY = 0;
+        rightTopX = rightTopY = rightBottomX = rightBottomY = 0;
+        isBoardAreaReady = false;
+        break;
+    }
+}
+
 /*
 void ImageProcessing::Dilate()
 {
