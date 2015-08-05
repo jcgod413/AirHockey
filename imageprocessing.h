@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QPixmap>
 #include <QColor>
+#include <QElapsedTimer>
 #include "ahr.h"
 
 class ImageProcessing : public QObject

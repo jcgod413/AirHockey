@@ -34,6 +34,9 @@ void ImageProcessing::loadRawImage(QImage rawImage)
 
 QImage ImageProcessing::getThresholdImage()
 {
+    QElapsedTimer timer;
+    timer.start();
+
     int toleranceBand = 5;
 
     int boundStartY = (leftTopY<rightTopY)
@@ -42,6 +45,10 @@ QImage ImageProcessing::getThresholdImage()
     int boundEndY = (leftBottomY>rightBottomY)
                     ? leftBottomY
                     : rightBottomY;
+
+    QImage thresholdImage = rawImage;
+
+    unsigned char *imageData = thresholdImage.bits();
 
     if( isBoardAreaReady )  {
         for(int i=boundStartY; i<boundEndY; i++)    {
@@ -54,24 +61,26 @@ QImage ImageProcessing::getThresholdImage()
                 || boundEndX > SCREEN_WIDTH )
                 continue;
 
-            for(int j=boundStartX; j<boundEndX; j++)   {
-                QColor maskColor = QColor::fromRgb(rawImage.pixel(j, i));
-                int red   = maskColor.red();
-                int green = maskColor.green();
-                int blue  = maskColor.blue();
+            for(int j=boundStartX; j<boundEndX; j++)    {
+                int loc = i*2560 + j*4;
+                unsigned char &blue = imageData[loc];
+                unsigned char &green = imageData[loc+1];
+                unsigned char &red = imageData[loc+2];
 
                 if( (red <= redMax+toleranceBand && red >= redMin-toleranceBand) &&
                     (green <= greenMax+toleranceBand && green >= greenMin-toleranceBand) &&
                     (blue <= blueMax+toleranceBand && blue >= blueMin-toleranceBand) )
                 {
-                    maskColor.setRgb(255, 0, 0, 255);
-                    rawImage.setPixel(j, i, maskColor.value());
+                    red = 0;
+                    green = 0;
+                    blue = 255;
                 }
             }
         }
     }
 
-    return rawImage;
+//    qDebug("%d", timer.elapsed());
+    return thresholdImage;
 }
 
 void ImageProcessing::getBoundX(int y, int &startX, int &endX)
@@ -212,6 +221,8 @@ void ImageProcessing::slotDraggedImage(int x, int y)
     greenMin = (greenMin>green) ? green : greenMin;
     blueMax  = (blueMax<blue) ? blue : blueMax;
     blueMin  = (blueMin>blue) ? blue : blueMin;
+
+    qDebug("%d %d %d", red, green, blue);
 }
 
 void ImageProcessing::slotResetMaskColor()
