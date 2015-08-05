@@ -68,9 +68,6 @@ signals:
 
 public slots:
     void slotSetBoardArea();
-    void slotErodeNumChanged(int);
-    void slotDilateNumChanged(int);
-
     void slotRectangleReady(bool);
     void slotBoardArea(bool);
 };

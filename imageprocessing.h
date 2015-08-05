@@ -15,7 +15,8 @@ public:
     explicit ImageProcessing(QObject *parent = 0);
     ~ImageProcessing();
     void loadRawImage(QImage);
-    void erodeImage(QImage &sourceImage);
+    void erode(QImage &sourceImage);
+    void dilate(QImage &sourceImage);
     QImage getThresholdImage();
     void getBoundX(int y, int &startX, int &endX);
 
@@ -44,6 +45,9 @@ private:
     int rightBottomX;
     int rightBottomY;
 
+    int erodeNum;
+    int dilateNum;
+
     double gradientA;   // Left Top Point와 Right Top Point의 기울기
     double gradientB;   // Right Top Point와 Right Bottom Point의 기울기
     double gradientC;   // Right Bottom Point와 Left Bottom Point의 기울기
@@ -56,6 +60,8 @@ public slots:
     void slotDraggedImage(int, int);
     void slotResetMaskColor();
     void slotBoardAreaPoint(int, int, int);
+    void slotErodeNumChanged(int);
+    void slotDilateNumChanged(int);
 };
 
 #endif // IMAGEPROCESSING_H

@@ -22,9 +22,7 @@ ImageGLView::ImageGLView(QWidget *parent) :
     greenMax(0),
     greenMin(255),
     blueMax(0),
-    blueMin(255),
-    erodeNum(0),
-    dilateNum(0)
+    blueMin(255)
 {
     setMouseTracking(true);
 }
@@ -210,26 +208,6 @@ void ImageGLView::slotSetBoardArea()
     boardAreaClick = LEFT_TOP;
 
     emit signalBoardAreaPoint(RESET_BOARD_AREA, 0, 0);
-}
-
-
-
-/**
- * @brief ImageGLView::slotErodeNumChanged
- * @param _erodeNum
- */
-void ImageGLView::slotErodeNumChanged(int _erodeNum)
-{
-    erodeNum = _erodeNum;
-}
-
-/**
- * @brief ImageGLView::slotDilateNumChanged
- * @param _dilateNum
- */
-void ImageGLView::slotDilateNumChanged(int _dilateNum)
-{
-    dilateNum = _dilateNum;
 }
 
 

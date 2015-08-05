@@ -17,6 +17,8 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     rightBottomX(0),
     rightBottomY(0),
     toleranceBand(5),
+    erodeNum(0),
+    dilateNum(0),
     isBoardAreaReady(false)
 {
 
@@ -36,8 +38,6 @@ QImage ImageProcessing::getThresholdImage()
 {
     QElapsedTimer timer;
     timer.start();
-
-    int toleranceBand = 5;
 
     int boundStartY = (leftTopY<rightTopY)
                      ? leftTopY
@@ -63,6 +63,7 @@ QImage ImageProcessing::getThresholdImage()
 
             for(int j=boundStartX; j<boundEndX; j++)    {
                 int loc = i*2560 + j*4;
+
                 unsigned char &blue = imageData[loc];
                 unsigned char &green = imageData[loc+1];
                 unsigned char &red = imageData[loc+2];
@@ -78,6 +79,11 @@ QImage ImageProcessing::getThresholdImage()
             }
         }
     }
+
+    for(int i=0; i<erodeNum; i++)
+        erode(thresholdImage);
+    for(int i=0; i<dilateNum; i++)
+        dilate(thresholdImage);
 
 //    qDebug("%d", timer.elapsed());
     return thresholdImage;
@@ -180,33 +186,6 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
 }
 
 
-void ImageProcessing::erodeImage(QImage &sourceImage)
-{
-    unsigned char *resData = sourceImage.bits();
-
-    int end = SCREEN_WIDTH*SCREEN_HEIGHT*4;
-    bool check[end/4];
-
-    for(int i=0; i<end; i+=4)    {
-        if( !(resData[i]==255 && resData[i+1]==0 && resData[i+2]==0) ) {
-            for(int k=0; k<8; k++)  {   //
-                if( (i + (dir[k][0]*SCREEN_WIDTH) + (dir[k][1]*4)) >= 0 &&
-                    (i + (dir[k][0]*SCREEN_WIDTH) + (dir[k][1]*4)) < end &&
-                    resData[(i + (dir[k][0]*SCREEN_WIDTH) + (dir[k][1]*4))] == 255 )
-                    resData[(i + (dir[k][0]*SCREEN_WIDTH) + (dir[k][1]*4))] = 1;
-            }
-        }
-    }
-
-    for(int i=0; i<end; i+=4)   {
-        if( resData[i] == 1 )   {
-            resData[i] = 0;
-            resData[i+1] = 0;
-            resData[i+2] = 0;
-        }
-    }
-}
-
 void ImageProcessing::slotDraggedImage(int x, int y)
 {
     QColor maskColor = QColor::fromRgb(rawImage.pixel(x, y));
@@ -277,30 +256,163 @@ void ImageProcessing::slotBoardAreaPoint(int boardAreaClick, int x, int y)
     }
 }
 
-/*
-void ImageProcessing::Dilate()
-{
-    unsigned char *resData = resultImage.bits();
-//    int end = WIDTH*HEIGHT*4;
 
-    for(int i=0; i<HEIGHT; i++) {
-        for(int j=0; j<WIDTH; j++)  {
-            if( resData[(i*WIDTH + j)*4] == 255 ) {
-                for(int k=0; k<8; k++)  {
-                    if( ((i+dir[k][0])*WIDTH + j+dir[k][1])*4 >= 0 &&
-                        ((i+dir[k][0])*WIDTH + j+dir[k][1])*4 < end &&
-                        resData[((i+dir[k][0])*WIDTH + j+dir[k][1])*4 ] == 0 )
-                        resData[ ((i+dir[k][0])*WIDTH + j+dir[k][1])*4 ] = 1;
+void ImageProcessing::slotErodeNumChanged(int _erodeNum)
+{
+    erodeNum = _erodeNum;
+}
+
+void ImageProcessing::slotDilateNumChanged(int _dilateNum)
+{
+    dilateNum = _dilateNum;
+}
+
+void ImageProcessing::erode(QImage &sourceImage)
+{
+    int end = SCREEN_WIDTH*SCREEN_HEIGHT*4;
+    bool check[end];
+    memset(check, false, sizeof(check));
+
+    int boundStartY = (leftTopY<rightTopY)
+                     ? leftTopY
+                     : rightTopY;
+    int boundEndY = (leftBottomY>rightBottomY)
+                    ? leftBottomY
+                    : rightBottomY;
+
+    unsigned char *imageData = sourceImage.bits();
+    unsigned char *rawImageData = rawImage.bits();
+
+    if( isBoardAreaReady )  {
+
+        for(int i=boundStartY; i<boundEndY; i++)    {
+            int boundStartX;
+            int boundEndX;
+
+            getBoundX(i, boundStartX, boundEndX);
+
+            if( boundStartX < 0 || boundEndX < 0
+                || boundEndX > SCREEN_WIDTH )
+                continue;
+
+            for(int j=boundStartX; j<boundEndX; j++)    {
+                int loc = i*2560 + j*4;
+
+                unsigned char blue = imageData[loc];
+                unsigned char green = imageData[loc+1];
+                unsigned char red = imageData[loc+2];
+
+                if( !(blue == 255 && red == 0 && green == 0) ) {
+                    for(int k=0; k<8; k++)  {
+
+                        int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
+
+                        unsigned char _blue = imageData[_loc];
+                        unsigned char _green = imageData[_loc+1];
+                        unsigned char _red = imageData[_loc+2];
+
+                        if( _blue == 255 && _red == 0 && _green == 0 ) {
+                            check[_loc] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int i=boundStartY; i<boundEndY; i++)   {
+            int boundStartX;
+            int boundEndX;
+
+            getBoundX(i, boundStartX, boundEndX);
+
+            if( boundStartX < 0 || boundEndX < 0
+                || boundEndX > SCREEN_WIDTH )
+                continue;
+
+            for(int j=boundStartX; j<boundEndX; j++)    {
+                int loc = i*2560 + j*4;
+                if( check[loc] == true )    {
+                    imageData[loc] = rawImageData[loc];
+                    imageData[loc+1] = rawImageData[loc+1];
+                    imageData[loc+2] = rawImageData[loc+2];
+                    imageData[loc+3] = rawImageData[loc+3];
                 }
             }
         }
     }
-    for(int i=0; i<end; i+=4)   {
-        if( resData[i] == 1 )   {
-            resData[i] = 255;
-            resData[i+1] = 255;
-            resData[i+2] = 255;
+}
+
+void ImageProcessing::dilate(QImage &sourceImage)
+{
+    int end = SCREEN_WIDTH*SCREEN_HEIGHT*4;
+    bool check[end];
+    memset(check, false, sizeof(check));
+
+    int boundStartY = (leftTopY<rightTopY)
+                     ? leftTopY
+                     : rightTopY;
+    int boundEndY = (leftBottomY>rightBottomY)
+                    ? leftBottomY
+                    : rightBottomY;
+
+    unsigned char *imageData = sourceImage.bits();
+
+    if( isBoardAreaReady )  {
+
+        for(int i=boundStartY; i<boundEndY; i++)    {
+            int boundStartX;
+            int boundEndX;
+
+            getBoundX(i, boundStartX, boundEndX);
+
+            if( boundStartX < 0 || boundEndX < 0
+                || boundEndX > SCREEN_WIDTH )
+                continue;
+
+            for(int j=boundStartX; j<boundEndX; j++)    {
+                int loc = i*2560 + j*4;
+
+                unsigned char blue = imageData[loc];
+                unsigned char green = imageData[loc+1];
+                unsigned char red = imageData[loc+2];
+
+                if( blue == 255 && red == 0 && green == 0 ) {
+                    for(int k=0; k<8; k++)  {
+
+                        int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
+
+                        unsigned char _blue = imageData[_loc];
+                        unsigned char _green = imageData[_loc+1];
+                        unsigned char _red = imageData[_loc+2];
+
+                        if( !(_blue == 255 && _red == 0 && _green == 0) ) {
+                            check[_loc] = true;
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int i=boundStartY; i<boundEndY; i++)   {
+            int boundStartX;
+            int boundEndX;
+
+            getBoundX(i, boundStartX, boundEndX);
+
+            if( boundStartX < 0 || boundEndX < 0
+                || boundEndX > SCREEN_WIDTH )
+                continue;
+
+            for(int j=boundStartX; j<boundEndX; j++)    {
+                int loc = i*2560 + j*4;
+                if( check[loc] == true )    {
+                    imageData[loc] = 255;
+                    imageData[loc+1] = 0;
+                    imageData[loc+2] = 0;
+                    imageData[loc+3] = 255;
+                }
+            }
         }
     }
 }
-*/
+
