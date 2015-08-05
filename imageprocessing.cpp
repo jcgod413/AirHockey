@@ -2,6 +2,8 @@
 
 ImageProcessing::ImageProcessing(QObject *parent) :
     QObject(parent),
+    ballColor(new QColor(0, 0, 255)),
+    isBoardAreaReady(false),
     redMax(0),
     greenMax(0),
     blueMax(0),
@@ -18,8 +20,7 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     rightBottomY(0),
     toleranceBand(5),
     erodeNum(0),
-    dilateNum(0),
-    isBoardAreaReady(false)
+    dilateNum(0)
 {
 
 }
@@ -72,9 +73,9 @@ QImage ImageProcessing::getThresholdImage()
                     (green <= greenMax+toleranceBand && green >= greenMin-toleranceBand) &&
                     (blue <= blueMax+toleranceBand && blue >= blueMin-toleranceBand) )
                 {
-                    red = 0;
-                    green = 0;
-                    blue = 255;
+                    red = ballColor->red();
+                    green = ballColor->green();
+                    blue = ballColor->blue();
                 }
             }
         }
@@ -269,6 +270,9 @@ void ImageProcessing::slotDilateNumChanged(int _dilateNum)
 
 void ImageProcessing::erode(QImage &sourceImage)
 {
+    if( !isBoardAreaReady )
+        return;
+
     int end = SCREEN_WIDTH*SCREEN_HEIGHT*4;
     bool check[end];
     memset(check, false, sizeof(check));
@@ -283,67 +287,74 @@ void ImageProcessing::erode(QImage &sourceImage)
     unsigned char *imageData = sourceImage.bits();
     unsigned char *rawImageData = rawImage.bits();
 
-    if( isBoardAreaReady )  {
+    for(int i=boundStartY; i<boundEndY; i++)    {
+        int boundStartX;
+        int boundEndX;
 
-        for(int i=boundStartY; i<boundEndY; i++)    {
-            int boundStartX;
-            int boundEndX;
+        getBoundX(i, boundStartX, boundEndX);
 
-            getBoundX(i, boundStartX, boundEndX);
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
 
-            if( boundStartX < 0 || boundEndX < 0
-                || boundEndX > SCREEN_WIDTH )
-                continue;
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
 
-            for(int j=boundStartX; j<boundEndX; j++)    {
-                int loc = i*2560 + j*4;
+            unsigned char blue = imageData[loc];
+            unsigned char green = imageData[loc+1];
+            unsigned char red = imageData[loc+2];
 
-                unsigned char blue = imageData[loc];
-                unsigned char green = imageData[loc+1];
-                unsigned char red = imageData[loc+2];
+            if( !(blue == ballColor->blue()
+                  && red == ballColor->red()
+                  && green == ballColor->green()) )
+            {
+                for(int k=0; k<8; k++)  {
 
-                if( !(blue == 255 && red == 0 && green == 0) ) {
-                    for(int k=0; k<8; k++)  {
+                    int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
 
-                        int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
+                    unsigned char _blue = imageData[_loc];
+                    unsigned char _green = imageData[_loc+1];
+                    unsigned char _red = imageData[_loc+2];
 
-                        unsigned char _blue = imageData[_loc];
-                        unsigned char _green = imageData[_loc+1];
-                        unsigned char _red = imageData[_loc+2];
-
-                        if( _blue == 255 && _red == 0 && _green == 0 ) {
-                            check[_loc] = true;
-                        }
+                    if( _blue == ballColor->blue()
+                        && _red == ballColor->red()
+                        && _green == ballColor->green() )
+                    {
+                        check[_loc] = true;
                     }
                 }
             }
         }
+    }
 
-        for(int i=boundStartY; i<boundEndY; i++)   {
-            int boundStartX;
-            int boundEndX;
+    for(int i=boundStartY; i<boundEndY; i++)   {
+        int boundStartX;
+        int boundEndX;
 
-            getBoundX(i, boundStartX, boundEndX);
+        getBoundX(i, boundStartX, boundEndX);
 
-            if( boundStartX < 0 || boundEndX < 0
-                || boundEndX > SCREEN_WIDTH )
-                continue;
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
 
-            for(int j=boundStartX; j<boundEndX; j++)    {
-                int loc = i*2560 + j*4;
-                if( check[loc] == true )    {
-                    imageData[loc] = rawImageData[loc];
-                    imageData[loc+1] = rawImageData[loc+1];
-                    imageData[loc+2] = rawImageData[loc+2];
-                    imageData[loc+3] = rawImageData[loc+3];
-                }
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
+            if( check[loc] == true )    {
+                imageData[loc] = rawImageData[loc];
+                imageData[loc+1] = rawImageData[loc+1];
+                imageData[loc+2] = rawImageData[loc+2];
+                imageData[loc+3] = rawImageData[loc+3];
             }
         }
     }
+
 }
 
 void ImageProcessing::dilate(QImage &sourceImage)
 {
+    if( !isBoardAreaReady )
+        return;
+
     int end = SCREEN_WIDTH*SCREEN_HEIGHT*4;
     bool check[end];
     memset(check, false, sizeof(check));
@@ -357,62 +368,103 @@ void ImageProcessing::dilate(QImage &sourceImage)
 
     unsigned char *imageData = sourceImage.bits();
 
-    if( isBoardAreaReady )  {
+    for(int i=boundStartY; i<boundEndY; i++)    {
+        int boundStartX;
+        int boundEndX;
 
-        for(int i=boundStartY; i<boundEndY; i++)    {
-            int boundStartX;
-            int boundEndX;
+        getBoundX(i, boundStartX, boundEndX);
 
-            getBoundX(i, boundStartX, boundEndX);
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
 
-            if( boundStartX < 0 || boundEndX < 0
-                || boundEndX > SCREEN_WIDTH )
-                continue;
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
 
-            for(int j=boundStartX; j<boundEndX; j++)    {
-                int loc = i*2560 + j*4;
+            unsigned char blue = imageData[loc];
+            unsigned char green = imageData[loc+1];
+            unsigned char red = imageData[loc+2];
 
-                unsigned char blue = imageData[loc];
-                unsigned char green = imageData[loc+1];
-                unsigned char red = imageData[loc+2];
+            if( blue == ballColor->blue()
+                && red == ballColor->red()
+                && green == ballColor->green() )
+            {
+                for(int k=0; k<8; k++)  {
+                    int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
 
-                if( blue == 255 && red == 0 && green == 0 ) {
-                    for(int k=0; k<8; k++)  {
+                    unsigned char _blue = imageData[_loc];
+                    unsigned char _green = imageData[_loc+1];
+                    unsigned char _red = imageData[_loc+2];
 
-                        int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
-
-                        unsigned char _blue = imageData[_loc];
-                        unsigned char _green = imageData[_loc+1];
-                        unsigned char _red = imageData[_loc+2];
-
-                        if( !(_blue == 255 && _red == 0 && _green == 0) ) {
-                            check[_loc] = true;
-                        }
+                    if( !(_blue == ballColor->blue()
+                          && _red == ballColor->red()
+                          && _green == ballColor->green()) ) {
+                        check[_loc] = true;
                     }
                 }
             }
         }
+    }
 
-        for(int i=boundStartY; i<boundEndY; i++)   {
-            int boundStartX;
-            int boundEndX;
+    for(int i=boundStartY; i<boundEndY; i++)   {
+        int boundStartX;
+        int boundEndX;
 
-            getBoundX(i, boundStartX, boundEndX);
+        getBoundX(i, boundStartX, boundEndX);
 
-            if( boundStartX < 0 || boundEndX < 0
-                || boundEndX > SCREEN_WIDTH )
-                continue;
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
 
-            for(int j=boundStartX; j<boundEndX; j++)    {
-                int loc = i*2560 + j*4;
-                if( check[loc] == true )    {
-                    imageData[loc] = 255;
-                    imageData[loc+1] = 0;
-                    imageData[loc+2] = 0;
-                    imageData[loc+3] = 255;
-                }
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
+            if( check[loc] == true )    {
+                imageData[loc] = 255;
+                imageData[loc+1] = 0;
+                imageData[loc+2] = 0;
+                imageData[loc+3] = 255;
             }
         }
     }
 }
 
+
+QPoint ImageProcessing::getBallPosition(QImage *frameImage)
+{
+    QPoint ballPosition = new QPoint(0,0);
+
+    if( !isBoardAreaReady )
+        return ballPosition;
+
+    unsigned char *imageData = frameImage->bits();
+
+    int boundStartY = (leftTopY<rightTopY)
+                     ? leftTopY
+                     : rightTopY;
+    int boundEndY = (leftBottomY>rightBottomY)
+                    ? leftBottomY
+                    : rightBottomY;
+
+    for(int i=boundStartY; i<boundEndY; i++)    {
+        int boundStartX;
+        int boundEndX;
+
+        getBoundX(i, boundStartX, boundEndX);
+
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
+
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
+
+            unsigned char blue = imageData[loc];
+            unsigned char green = imageData[loc+1];
+            unsigned char red = imageData[loc+2];
+
+            if( blue == 255 && red == 0 && green == 0 ) {
+
+            }
+        }
+    }
+}

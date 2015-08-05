@@ -6,6 +6,8 @@
 #include <QPixmap>
 #include <QColor>
 #include <QElapsedTimer>
+#include <QPoint>
+#include <QColor>
 #include "ahr.h"
 
 class ImageProcessing : public QObject
@@ -19,6 +21,7 @@ public:
     void dilate(QImage &sourceImage);
     QImage getThresholdImage();
     void getBoundX(int y, int &startX, int &endX);
+    QPoint getBallPosition(QImage *frameImage);
 
 private:
     QImage rawImage;
@@ -52,6 +55,8 @@ private:
     double gradientB;   // Right Top Point와 Right Bottom Point의 기울기
     double gradientC;   // Right Bottom Point와 Left Bottom Point의 기울기
     double gradientD;   // Right Bottom Point와 Left Bottom Point의 기울기
+
+    QColor *ballColor;
 signals:
     void signalRectangleReady(bool);
     void signalBoardArea(bool);
