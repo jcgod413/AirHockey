@@ -71,6 +71,9 @@ void Widget::initWidget()
             imageGLView, SLOT(slotBoardArea(bool)));
     connect(imageProcessing, SIGNAL(signalRectangleReady(bool)),
             imageGLView, SLOT(slotRectangleReady(bool)));
+
+    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
+            this, SLOT(slotFindBall(QPoint)));
 }
 
 /**
@@ -217,4 +220,14 @@ void Widget::slotCaptureLoad()
     imageProcessing->loadRawImage(frameImage);
 
     imageGLView->imageLoad(imageProcessing->getThresholdImage());
+}
+
+/**
+ * @brief Widget::slotFindBall
+ * @param ballPosition
+ */
+void Widget::slotFindBall(QPoint ballPosition)
+{
+    ui->ballPositionX->setNum(ballPosition.x());
+    ui->ballPositionY->setNum(ballPosition.y());
 }

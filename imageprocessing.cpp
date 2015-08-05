@@ -86,6 +86,9 @@ QImage ImageProcessing::getThresholdImage()
     for(int i=0; i<dilateNum; i++)
         dilate(thresholdImage);
 
+    QPoint ballPosition = getBallPosition(&thresholdImage);
+    emit signalFindBall(ballPosition);
+
 //    qDebug("%d", timer.elapsed());
     return thresholdImage;
 }
@@ -347,7 +350,6 @@ void ImageProcessing::erode(QImage &sourceImage)
             }
         }
     }
-
 }
 
 void ImageProcessing::dilate(QImage &sourceImage)
@@ -431,12 +433,16 @@ void ImageProcessing::dilate(QImage &sourceImage)
 
 QPoint ImageProcessing::getBallPosition(QImage *frameImage)
 {
-    QPoint *ballPosition = new QPoint(0,0);
-
     if( !isBoardAreaReady )
-        return *ballPosition;
+        return QPoint(0, 0);    // Board area not ready
+
+    int max = 0;
+    int groupNum = 1;
+    QPoint minPoint;
+    QPoint maxPoint;
 
     unsigned char *imageData = frameImage->bits();
+    memset(label, 0, sizeof(label));
 
     int boundStartY = (leftTopY<rightTopY)
                      ? leftTopY
@@ -457,19 +463,63 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
 
         for(int j=boundStartX; j<boundEndX; j++)    {
             int loc = i*2560 + j*4;
+            QColor *color = new QColor(imageData[loc+2],
+                                       imageData[loc+1],
+                                       imageData[loc],
+                                       255);
 
-            unsigned char blue = imageData[loc];
-            unsigned char green = imageData[loc+1];
-            unsigned char red = imageData[loc+2];
-
-            if( blue == ballColor->blue()
-                && red == ballColor->red()
-                && green == ballColor->green() )
+            if( color->blue() == ballColor->blue()
+                && label[i][j] == 0 )
             {
-                // search
+                QPoint _minPoint;
+                QPoint _maxPoint;
+                groupCnt=0;
+
+                searchGroup(groupNum++, QPoint(j, i),
+                            &_minPoint, &_maxPoint, imageData);
+
+                if( groupCnt > max ) {
+                    max = groupCnt;
+                    maxPoint = _maxPoint;
+                    minPoint = _minPoint;
+                }
             }
         }
     }
+//    qDebug("%d", max);
 
-    return *ballPosition;
+    return QPoint((minPoint.x()+maxPoint.x())/2,
+                  (minPoint.y()+maxPoint.y())/2);
 }
+
+void ImageProcessing::searchGroup(int groupNum,
+                                  QPoint point,
+                                  QPoint *minPoint,
+                                  QPoint *maxPoint,
+                                  unsigned char *imageData)
+{
+    for(int i=0; i<8; i++)  {
+        int x = point.x() + dir[i][0];
+        int y = point.y() + dir[i][1];
+
+        int loc = y*2560 + x*4;
+        QColor *color = new QColor(imageData[loc+2],
+                                    imageData[loc+1],
+                                    imageData[loc],
+                                    255);
+
+        if( color->blue() == ballColor->blue() && label[y][x] == 0 )  {
+            label[y][x] = groupNum;
+
+            if( x > maxPoint->x() )    maxPoint->setX(x);
+            if( x < minPoint->x() )    minPoint->setX(x);
+            if( y > maxPoint->y() )    maxPoint->setY(y);
+            if( y > minPoint->y() )    minPoint->setY(y);
+
+            groupCnt++;
+            searchGroup(groupNum, QPoint(x, y),
+                        minPoint, maxPoint, imageData);
+        }
+    }
+}
+

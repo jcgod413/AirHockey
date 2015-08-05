@@ -22,12 +22,16 @@ public:
     QImage getThresholdImage();
     void getBoundX(int y, int &startX, int &endX);
     QPoint getBallPosition(QImage *frameImage);
+    void searchGroup(int groupNum, QPoint point,
+                     QPoint *minPoint, QPoint *maxPoint,
+                     unsigned char *imageData);
 
 private:
     QImage rawImage;
 
-    int toleranceBand;  // Mask Color 오차
+    int toleranceBand;  // Mask Color 오차 범위
 
+    int label[SCREEN_HEIGHT][SCREEN_WIDTH];
     int dir[8][2] = { {-1,-1}, {0, -1}, {1, -1}, {1, 0},
                       {1, 1},  {0, 1}, {-1, 1}, {-1, 0}};
     bool isBoardAreaReady;
@@ -57,9 +61,12 @@ private:
     double gradientD;   // Right Bottom Point와 Left Bottom Point의 기울기
 
     QColor *ballColor;
+    int groupCnt;
+
 signals:
     void signalRectangleReady(bool);
     void signalBoardArea(bool);
+    void signalFindBall(QPoint);
 
 public slots:
     void slotDraggedImage(int, int);
