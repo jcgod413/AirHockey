@@ -431,10 +431,10 @@ void ImageProcessing::dilate(QImage &sourceImage)
 
 QPoint ImageProcessing::getBallPosition(QImage *frameImage)
 {
-    QPoint ballPosition = new QPoint(0,0);
+    QPoint *ballPosition = new QPoint(0,0);
 
     if( !isBoardAreaReady )
-        return ballPosition;
+        return *ballPosition;
 
     unsigned char *imageData = frameImage->bits();
 
@@ -462,9 +462,14 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
             unsigned char green = imageData[loc+1];
             unsigned char red = imageData[loc+2];
 
-            if( blue == 255 && red == 0 && green == 0 ) {
-
+            if( blue == ballColor->blue()
+                && red == ballColor->red()
+                && green == ballColor->green() )
+            {
+                // search
             }
         }
     }
+
+    return *ballPosition;
 }
