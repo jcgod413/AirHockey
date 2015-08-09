@@ -23,8 +23,7 @@ public:
     void getBoundX(int y, int &startX, int &endX);
     QPoint getBallPosition(QImage *frameImage);
     void searchGroup(int groupNum, QPoint point,
-                     QPoint *minPoint, QPoint *maxPoint,
-                     unsigned char *imageData);
+                     QPoint *minPoint, QPoint *maxPoint);
 
 private:
     QImage rawImage;
@@ -35,6 +34,9 @@ private:
     int dir[8][2] = { {-1,-1}, {0, -1}, {1, -1}, {1, 0},
                       {1, 1},  {0, 1}, {-1, 1}, {-1, 0}};
     bool isBoardAreaReady;
+
+    unsigned char *imageData;
+    unsigned char *rawImageData;
 
     int redMax;
     int redMin;
@@ -54,6 +56,7 @@ private:
 
     int erodeNum;
     int dilateNum;
+    bool enableMorpology;
 
     double gradientA;   // Left Top Point와 Right Top Point의 기울기
     double gradientB;   // Right Top Point와 Right Bottom Point의 기울기
@@ -72,8 +75,7 @@ public slots:
     void slotDraggedImage(int, int);
     void slotResetMaskColor();
     void slotBoardAreaPoint(int, int, int);
-    void slotErodeNumChanged(int);
-    void slotDilateNumChanged(int);
+    void slotMorpologyEnable(bool);
 };
 
 #endif // IMAGEPROCESSING_H

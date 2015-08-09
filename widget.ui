@@ -103,28 +103,11 @@
    <item>
     <layout class="QVBoxLayout" name="verticalLayout_4">
      <item>
-      <layout class="QGridLayout" name="gridLayout">
-       <item row="0" column="1">
-        <widget class="QLabel" name="dilateLabel">
-         <property name="text">
-          <string>Dilate</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QLabel" name="erodeLabel">
-         <property name="text">
-          <string>Erode</string>
-         </property>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QSpinBox" name="erodeSpinBox"/>
-       </item>
-       <item row="1" column="1">
-        <widget class="QSpinBox" name="dilateSpinBox"/>
-       </item>
-      </layout>
+      <widget class="QCheckBox" name="morpologyEnableCheck">
+       <property name="text">
+        <string>Morpology</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="resetColorButton">

@@ -42,25 +42,19 @@ void Widget::initWidget()
     ui->resetColorButton->setEnabled(false);
     ui->setBoardAreaButton->setEnabled(false);
 
-    ui->erodeSpinBox->setValue(2);
-    ui->dilateSpinBox->setValue(1);
-    imageProcessing->slotErodeNumChanged(2);
-    imageProcessing->slotDilateNumChanged(1);
-
     connect(ui->startButton, SIGNAL(clicked()),
                              SLOT(slotCameraStart()));
     connect(ui->stopButton, SIGNAL(clicked()),
                             SLOT(slotCameraStop()));
     connect(ui->captureButton, SIGNAL(clicked()),
                                SLOT(slotCameraCapture()));
+
     connect(ui->resetColorButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotResetMaskColor()));
     connect(ui->setBoardAreaButton, SIGNAL(clicked()),
             imageGLView, SLOT(slotSetBoardArea()));
-    connect(ui->erodeSpinBox, SIGNAL(valueChanged(int)),
-            imageProcessing, SLOT(slotErodeNumChanged(int)));
-    connect(ui->dilateSpinBox, SIGNAL(valueChanged(int)),
-            imageProcessing, SLOT(slotDilateNumChanged(int)));
+    connect(ui->morpologyEnableCheck, SIGNAL(toggled(bool)),
+            imageProcessing, SLOT(slotMorpologyEnable(bool)));
 
     connect(imageGLView, SIGNAL(signalDraggedImage(int,int)),
             imageProcessing, SLOT(slotDraggedImage(int,int)));

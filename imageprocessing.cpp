@@ -19,22 +19,34 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     rightBottomX(0),
     rightBottomY(0),
     toleranceBand(5),
-    erodeNum(0),
-    dilateNum(0)
+    erodeNum(2),
+    dilateNum(1),
+    enableMorpology(false)
 {
 
 }
 
+/**
+ * @brief ImageProcessing::~ImageProcessing
+ */
 ImageProcessing::~ImageProcessing()
 {
 
 }
 
+/**
+ * @brief ImageProcessing::loadRawImage
+ * @param rawImage
+ */
 void ImageProcessing::loadRawImage(QImage rawImage)
 {
     this->rawImage = rawImage;
 }
 
+/**
+ * @brief ImageProcessing::getThresholdImage
+ * @return
+ */
 QImage ImageProcessing::getThresholdImage()
 {
     QElapsedTimer timer;
@@ -49,7 +61,7 @@ QImage ImageProcessing::getThresholdImage()
 
     QImage thresholdImage = rawImage;
 
-    unsigned char *imageData = thresholdImage.bits();
+    imageData = thresholdImage.bits();
 
     if( isBoardAreaReady )  {
         for(int i=boundStartY; i<boundEndY; i++)    {
@@ -81,10 +93,12 @@ QImage ImageProcessing::getThresholdImage()
         }
     }
 
-    for(int i=0; i<erodeNum; i++)
-        erode(thresholdImage);
-    for(int i=0; i<dilateNum; i++)
-        dilate(thresholdImage);
+    if( enableMorpology )   {
+        for(int i=0; i<erodeNum; i++)
+            erode(thresholdImage);
+        for(int i=0; i<dilateNum; i++)
+            dilate(thresholdImage);
+    }
 
     QPoint ballPosition = getBallPosition(&thresholdImage);
     emit signalFindBall(ballPosition);
@@ -93,6 +107,12 @@ QImage ImageProcessing::getThresholdImage()
     return thresholdImage;
 }
 
+/**
+ * @brief ImageProcessing::getBoundX
+ * @param y
+ * @param startX
+ * @param endX
+ */
 void ImageProcessing::getBoundX(int y, int &startX, int &endX)
 {
     // y 절편
@@ -189,7 +209,11 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
     }
 }
 
-
+/**
+ * @brief ImageProcessing::slotDraggedImage
+ * @param x
+ * @param y
+ */
 void ImageProcessing::slotDraggedImage(int x, int y)
 {
     QColor maskColor = QColor::fromRgb(rawImage.pixel(x, y));
@@ -208,12 +232,21 @@ void ImageProcessing::slotDraggedImage(int x, int y)
     qDebug("%d %d %d", red, green, blue);
 }
 
+/**
+ * @brief ImageProcessing::slotResetMaskColor
+ */
 void ImageProcessing::slotResetMaskColor()
 {
     redMax = greenMax = blueMax = 0;
     redMin = greenMin = blueMin = 255;
 }
 
+/**
+ * @brief ImageProcessing::slotBoardAreaPoint
+ * @param boardAreaClick
+ * @param x
+ * @param y
+ */
 void ImageProcessing::slotBoardAreaPoint(int boardAreaClick, int x, int y)
 {
     switch(boardAreaClick)  {
@@ -260,17 +293,19 @@ void ImageProcessing::slotBoardAreaPoint(int boardAreaClick, int x, int y)
     }
 }
 
-
-void ImageProcessing::slotErodeNumChanged(int _erodeNum)
+/**
+ * @brief ImageProcessing::slotMorpologyEnable
+ * @param check
+ */
+void ImageProcessing::slotMorpologyEnable(bool check)
 {
-    erodeNum = _erodeNum;
+    enableMorpology = check;
 }
 
-void ImageProcessing::slotDilateNumChanged(int _dilateNum)
-{
-    dilateNum = _dilateNum;
-}
-
+/**
+ * @brief ImageProcessing::erode
+ * @param sourceImage
+ */
 void ImageProcessing::erode(QImage &sourceImage)
 {
     if( !isBoardAreaReady )
@@ -287,8 +322,8 @@ void ImageProcessing::erode(QImage &sourceImage)
                     ? leftBottomY
                     : rightBottomY;
 
-    unsigned char *imageData = sourceImage.bits();
-    unsigned char *rawImageData = rawImage.bits();
+    imageData = sourceImage.bits();
+    rawImageData = rawImage.bits();
 
     for(int i=boundStartY; i<boundEndY; i++)    {
         int boundStartX;
@@ -352,6 +387,10 @@ void ImageProcessing::erode(QImage &sourceImage)
     }
 }
 
+/**
+ * @brief ImageProcessing::dilate
+ * @param sourceImage
+ */
 void ImageProcessing::dilate(QImage &sourceImage)
 {
     if( !isBoardAreaReady )
@@ -368,7 +407,7 @@ void ImageProcessing::dilate(QImage &sourceImage)
                     ? leftBottomY
                     : rightBottomY;
 
-    unsigned char *imageData = sourceImage.bits();
+    imageData = sourceImage.bits();
 
     for(int i=boundStartY; i<boundEndY; i++)    {
         int boundStartX;
@@ -430,7 +469,11 @@ void ImageProcessing::dilate(QImage &sourceImage)
     }
 }
 
-
+/**
+ * @brief ImageProcessing::getBallPosition
+ * @param frameImage
+ * @return
+ */
 QPoint ImageProcessing::getBallPosition(QImage *frameImage)
 {
     if( !isBoardAreaReady )
@@ -441,13 +484,13 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
     QPoint minPoint;
     QPoint maxPoint;
 
-    unsigned char *imageData = frameImage->bits();
+    imageData = frameImage->bits();
     memset(label, 0, sizeof(label));
 
-    int boundStartY = (leftTopY<rightTopY)
-                     ? leftTopY
-                     : rightTopY;
-    int boundEndY = (leftBottomY>rightBottomY)
+    int boundStartY = (leftTopY < rightTopY)
+                      ? leftTopY
+                      : rightTopY;
+    int boundEndY = (leftBottomY > rightBottomY)
                     ? leftBottomY
                     : rightBottomY;
 
@@ -476,7 +519,7 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
                 groupCnt=0;
 
                 searchGroup(groupNum++, QPoint(j, i),
-                            &_minPoint, &_maxPoint, imageData);
+                            &_minPoint, &_maxPoint);
 
                 if( groupCnt > max ) {
                     max = groupCnt;
@@ -484,26 +527,34 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
                     minPoint = _minPoint;
                 }
             }
+
+            delete color;
         }
     }
-//    qDebug("%d", max);
 
     return QPoint((minPoint.x()+maxPoint.x())/2,
                   (minPoint.y()+maxPoint.y())/2);
+
 }
 
+/**
+ * @brief ImageProcessing::searchGroup
+ * @param groupNum
+ * @param point
+ * @param minPoint
+ * @param maxPoint
+ */
 void ImageProcessing::searchGroup(int groupNum,
                                   QPoint point,
                                   QPoint *minPoint,
-                                  QPoint *maxPoint,
-                                  unsigned char *imageData)
+                                  QPoint *maxPoint)
 {
     for(int i=0; i<8; i++)  {
         int x = point.x() + dir[i][0];
         int y = point.y() + dir[i][1];
 
         int loc = y*2560 + x*4;
-        QColor *color = new QColor(imageData[loc+2],
+        QColor *color =  new QColor(imageData[loc+2],
                                     imageData[loc+1],
                                     imageData[loc],
                                     255);
@@ -518,8 +569,10 @@ void ImageProcessing::searchGroup(int groupNum,
 
             groupCnt++;
             searchGroup(groupNum, QPoint(x, y),
-                        minPoint, maxPoint, imageData);
+                        minPoint, maxPoint);
         }
+
+        delete color;
     }
 }
 
