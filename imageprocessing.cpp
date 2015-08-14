@@ -127,11 +127,11 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
         y_intercept = leftTopY-(leftTopX*gradientD);
         startX = (y - y_intercept) / gradientD;
 
-        if( y < rightTopY )  {
+        if( y <= rightTopY )  {
             y_intercept = rightTopY-(rightTopX*gradientA);
             endX = (y - y_intercept) / gradientA;
         }
-        else if( y < rightBottomY )  {
+        else if( y <= rightBottomY )  {
             y_intercept = rightTopY-(rightTopX*gradientB);
             endX = (y - y_intercept) / gradientB;
         }
@@ -147,8 +147,8 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
      * 2. Left Top Point가 Right Top Point보다 y값이 크고,
      * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
      */
-    if( leftTopY < rightTopY && leftBottomY < rightBottomY )    {
-        if( y < leftBottomY )   {
+    if( leftTopY <= rightTopY && leftBottomY <= rightBottomY )    {
+        if( y <= leftBottomY )   {
             y_intercept = leftBottomY-(leftBottomX*gradientD);
             startX = (y - y_intercept) / gradientD;
         }
@@ -157,7 +157,7 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
             startX = (y - y_intercept) / gradientC;
         }
 
-        if( y < rightTopY )   {
+        if( y <= rightTopY )   {
             y_intercept = rightTopY-(rightTopX*gradientA);
             endX = (y - y_intercept) / gradientA;
         }
@@ -166,8 +166,8 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
             endX = (y - y_intercept) / gradientB;
         }
     }
-    if( leftTopY > rightTopY && leftBottomY > rightBottomY )    {
-        if( y < leftTopY )  {
+    if( leftTopY >= rightTopY && leftBottomY <= rightBottomY )    {
+        if( y <= leftTopY )  {
             y_intercept = leftTopY-(leftTopX*gradientA);
             startX = (y - y_intercept) / gradientA;
         }
@@ -176,7 +176,7 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
             startX = (y - y_intercept) / gradientD;
         }
 
-        if( y < rightBottomY )  {
+        if( y <= rightBottomY )  {
             y_intercept = rightBottomY-(rightBottomX*gradientB);
             endX = (y - y_intercept) / gradientB;
         }
@@ -190,12 +190,12 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
      * 1. Left Top Point가 Right Top Point보다 y값이 크고,
      * Left Bottom Point가 Right Bottom Point보다 y값이 작은 경우.
      */
-    if( leftTopY > rightTopY && leftBottomY < rightBottomY )    {
-        if( y < leftTopY )  {
+    if( leftTopY >= rightTopY && leftBottomY <= rightBottomY )    {
+        if( y <= leftTopY )  {
             y_intercept = leftTopY-(leftTopX*gradientA);
             startX = (y - y_intercept) / gradientA;
         }
-        else if( y < leftBottomY )  {
+        else if( y <= leftBottomY )  {
             y_intercept = leftTopY-(leftTopX*gradientD);
             startX = (y - y_intercept) / gradientD;
         }
@@ -480,9 +480,14 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
         return QPoint(0, 0);    // Board area not ready
 
     int max = 0;
+    int maxIndex = 0;
     int groupNum = 1;
-    QPoint minPoint;
-    QPoint maxPoint;
+    int x;
+    int y;
+
+    Outline maxOutline;
+    Outline *outline = new Outline[groupNum];
+    int *group = new int[groupNum];
 
     imageData = frameImage->bits();
     memset(label, 0, sizeof(label));
@@ -511,29 +516,66 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
                                        imageData[loc],
                                        255);
 
-            if( color->blue() == ballColor->blue()
-                && label[i][j] == 0 )
+            if( color->operator ==(*ballColor) && label[i][j] == 0 )
             {
-                QPoint _minPoint;
-                QPoint _maxPoint;
-                groupCnt=0;
+                bool isGroupAdjacent = false;
 
-                searchGroup(groupNum++, QPoint(j, i),
-                            &_minPoint, &_maxPoint);
+                for(int k=0; k<4; k++)  {
+                    x = j + dir[k][1];
+                    y = i + dir[k][0];
 
-                if( groupCnt > max ) {
-                    max = groupCnt;
-                    maxPoint = _maxPoint;
-                    minPoint = _minPoint;
+                    if( label[y][x] > 0 )   {
+                        isGroupAdjacent = true;
+                        label[i][j] = label[y][x];
+
+                        if( max < ++group[label[i][j]-1] )    {
+                            max = group[label[i][j]-1];
+                            maxIndex = label[i][j]-1;
+                            maxOutline = outline[maxIndex];
+                        }
+
+                        if( x < outline[label[i][j]-1].leftUpSide.x() )
+                            outline[label[i][j]-1].leftUpSide.setX(j);
+                        if( y < outline[label[i][j]-1].leftUpSide.y() )
+                            outline[label[i][j]-1].leftUpSide.setY(i);
+                        if( x > outline[label[i][j]-1].rightDownSide.x() )
+                            outline[label[i][j]-1].rightDownSide.setX(j);
+                        if( y > outline[label[i][j]-1].rightDownSide.y() )
+                            outline[label[i][j]-1].rightDownSide.setY(i);
+
+                        break;
+                    }
+                }
+                if( isGroupAdjacent )
+                    continue;
+                else    {
+                    label[i][j] = ++groupNum;
+
+                    int *tempGroup = new int[groupNum];
+                    Outline *tempOutline = new Outline[groupNum];
+
+                    memcpy(tempGroup, group, sizeof(int)*(groupNum-1));
+                    memcpy(tempOutline, outline, sizeof(Outline)*(groupNum-1));
+                    delete group;
+                    delete outline;
+
+                    group = tempGroup;
+                    outline = tempOutline;
+
+                    group[groupNum-1] = 1;
+                    outline[groupNum-1].leftUpSide.setX(j);
+                    outline[groupNum-1].leftUpSide.setY(i);
+                    outline[groupNum-1].rightDownSide.setX(j);
+                    outline[groupNum-1].rightDownSide.setY(i);
                 }
             }
 
             delete color;
-        }
+        }   
     }
 
-    return QPoint((minPoint.x()+maxPoint.x())/2,
-                  (minPoint.y()+maxPoint.y())/2);
+    return QPoint((maxOutline.leftUpSide.x() + maxOutline.rightDownSide.x()) / 2,
+                  (maxOutline.leftUpSide.y() + maxOutline.rightDownSide.y()) / 2);
 
 }
 
@@ -544,14 +586,20 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
  * @param minPoint
  * @param maxPoint
  */
-void ImageProcessing::searchGroup(int groupNum,
+inline void ImageProcessing::searchGroup(int groupNum,
                                   QPoint point,
                                   QPoint *minPoint,
                                   QPoint *maxPoint)
 {
+    int x = point.x();
+    int y = point.y();
+
+    label[y][x] = groupNum;
+//    groupCnt++;
+
     for(int i=0; i<8; i++)  {
-        int x = point.x() + dir[i][0];
-        int y = point.y() + dir[i][1];
+        x = point.x() + dir[i][0];
+        y = point.y() + dir[i][1];
 
         int loc = y*2560 + x*4;
         QColor *color =  new QColor(imageData[loc+2],
@@ -559,15 +607,12 @@ void ImageProcessing::searchGroup(int groupNum,
                                     imageData[loc],
                                     255);
 
-        if( color->blue() == ballColor->blue() && label[y][x] == 0 )  {
-            label[y][x] = groupNum;
-
+        if( color->value()==ballColor->value() && label[y][x] == 0 )  {
             if( x > maxPoint->x() )    maxPoint->setX(x);
             if( x < minPoint->x() )    minPoint->setX(x);
             if( y > maxPoint->y() )    maxPoint->setY(y);
             if( y > minPoint->y() )    minPoint->setY(y);
 
-            groupCnt++;
             searchGroup(groupNum, QPoint(x, y),
                         minPoint, maxPoint);
         }
