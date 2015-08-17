@@ -103,6 +103,7 @@ QImage ImageProcessing::getThresholdImage()
     QPoint ballPosition = getBallPosition(&thresholdImage);
     emit signalFindBall(ballPosition);
 
+
 //    qDebug("%d", timer.elapsed());
     return thresholdImage;
 }
@@ -118,11 +119,26 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
     // y 절편
     int y_intercept;
 
+    /* 직사각형인 case
+     * 1. Left Top Y가 Right Top Y와 같고,
+     * Left Bottom Y가 Right Bottom Y와 같은 경우.
+     * 2. Left Top X가 Left Bottom X와 같고,
+     * Right Top X가 Right Bottom X와 같은 경우.
+     */
+    if( leftTopX == leftBottomX && leftTopY == rightTopY
+        && rightTopX == rightBottomX && leftBottomY == rightBottomY )
+    {
+        startX = leftTopX;
+        endX = rightTopX;
+
+        return;
+    }
+
     /* 왼쪽 변이 한개 있는 case = 오른쪽 변이 세개 있는 case
      * 1. Left Top Point가 Right Top Point보다 y값이 작고,
      * Left Bottom Point가 Right Bottom Point보다 y값이 큰 경우.
      */
-    if( leftTopY <= rightTopY && leftBottomY >= rightBottomY )    {
+    if( leftTopY < rightTopY && leftBottomY > rightBottomY )    {
         // y = ax+b  ->  y절편 = y-ax
         y_intercept = leftTopY-(leftTopX*gradientD);
         startX = (y - y_intercept) / gradientD;
@@ -166,7 +182,7 @@ void ImageProcessing::getBoundX(int y, int &startX, int &endX)
             endX = (y - y_intercept) / gradientB;
         }
     }
-    if( leftTopY >= rightTopY && leftBottomY <= rightBottomY )    {
+    if( leftTopY > rightTopY && leftBottomY < rightBottomY )    {
         if( y <= leftTopY )  {
             y_intercept = leftTopY-(leftTopX*gradientA);
             startX = (y - y_intercept) / gradientA;
@@ -241,6 +257,11 @@ void ImageProcessing::slotResetMaskColor()
     redMin = greenMin = blueMin = 255;
 }
 
+void ImageProcessing::slotBoardAreaReady(bool _isBoardAreaReady)
+{
+    isBoardAreaReady = _isBoardAreaReady;
+}
+
 /**
  * @brief ImageProcessing::slotBoardAreaPoint
  * @param boardAreaClick
@@ -278,8 +299,6 @@ void ImageProcessing::slotBoardAreaPoint(int boardAreaClick, int x, int y)
         // Left Bottom Point와 Left Top Point의 기울기
         gradientD = (double)(leftBottomY-leftTopY)
                    / (double)(leftBottomX-leftTopX);
-
-        isBoardAreaReady = true;
 
         emit signalRectangleReady(true);
         emit signalBoardArea(false);

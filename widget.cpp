@@ -41,6 +41,8 @@ void Widget::initWidget()
     ui->captureButton->setEnabled(false);
     ui->resetColorButton->setEnabled(false);
     ui->setBoardAreaButton->setEnabled(false);
+    ui->setBoardRectangleButton->setEnabled(false);
+    ui->morpologyEnableCheck->setEnabled(false);
 
     connect(ui->startButton, SIGNAL(clicked()),
                              SLOT(slotCameraStart()));
@@ -53,6 +55,8 @@ void Widget::initWidget()
             imageProcessing, SLOT(slotResetMaskColor()));
     connect(ui->setBoardAreaButton, SIGNAL(clicked()),
             imageGLView, SLOT(slotSetBoardArea()));
+    connect(ui->setBoardRectangleButton, SIGNAL(clicked()),
+            imageGLView, SLOT(slotSetRectangleBoardArea()));
     connect(ui->morpologyEnableCheck, SIGNAL(toggled(bool)),
             imageProcessing, SLOT(slotMorpologyEnable(bool)));
 
@@ -60,11 +64,15 @@ void Widget::initWidget()
             imageProcessing, SLOT(slotDraggedImage(int,int)));
     connect(imageGLView, SIGNAL(signalBoardAreaPoint(int,int,int)),
             imageProcessing, SLOT(slotBoardAreaPoint(int,int,int)));
+    connect(imageGLView, SIGNAL(signalBoardAreaReady(bool)),
+            imageProcessing, SLOT(slotBoardAreaReady(bool)));
 
     connect(imageProcessing, SIGNAL(signalBoardArea(bool)),
             imageGLView, SLOT(slotBoardArea(bool)));
     connect(imageProcessing, SIGNAL(signalRectangleReady(bool)),
             imageGLView, SLOT(slotRectangleReady(bool)));
+    connect(imageProcessing, SIGNAL(signalBoardArea(bool)),
+            imageGLView, SLOT(slotBoardArea(bool)));
 
     connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
             this, SLOT(slotFindBall(QPoint)));
@@ -111,6 +119,8 @@ void Widget::slotThreadStart()
        ui->captureButton->setEnabled(true);
        ui->resetColorButton->setEnabled(true);
        ui->setBoardAreaButton->setEnabled(true);
+       ui->setBoardRectangleButton->setEnabled(true);
+       ui->morpologyEnableCheck->setEnabled(false);
    }
 }
 

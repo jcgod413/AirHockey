@@ -80,6 +80,7 @@ public slots:
     void slotResetMaskColor();
     void slotBoardAreaPoint(int, int, int);
     void slotMorpologyEnable(bool);
+    void slotBoardAreaReady(bool);
 };
 
 #endif // IMAGEPROCESSING_H

@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>778</width>
+    <width>781</width>
     <height>514</height>
    </rect>
   </property>
@@ -119,7 +119,16 @@
      <item>
       <widget class="QPushButton" name="setBoardAreaButton">
        <property name="text">
-        <string>Set Board Area</string>
+        <string>Set Board Area
+(자유형)</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="setBoardRectangleButton">
+       <property name="text">
+        <string>Set Board Area
+(사각형)</string>
        </property>
       </widget>
      </item>

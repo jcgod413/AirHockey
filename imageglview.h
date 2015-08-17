@@ -32,6 +32,8 @@ private:
     bool isMouseClicked;
     bool isBoardArea;
     bool isRectangleReady;
+    bool isRectangleBoardArea;
+    bool isRectangleBoardClick;
 
     int redMax;
     int redMin;
@@ -65,9 +67,11 @@ private:
 signals:
     void signalDraggedImage(int, int);
     void signalBoardAreaPoint(int, int, int);
+    void signalBoardAreaReady(bool);
 
 public slots:
     void slotSetBoardArea();
+    void slotSetRectangleBoardArea();
     void slotRectangleReady(bool);
     void slotBoardArea(bool);
 };
