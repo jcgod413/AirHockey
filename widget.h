@@ -9,6 +9,7 @@
 #include "imageglview.h"
 #include "imageprocessing.h"
 #include "capturethread.h"
+#include "ball.h"
 
 namespace Ui {
 class Widget;
@@ -37,6 +38,7 @@ private:
     ImageGLView *imageGLView;
     ImageProcessing *imageProcessing;
     CaptureThread *captureThread;
+    Ball *ball;
 
 
 public slots:

@@ -100,9 +100,7 @@ QImage ImageProcessing::getThresholdImage()
             dilate(thresholdImage);
     }
 
-    QPoint ballPosition = getBallPosition(&thresholdImage);
-    emit signalFindBall(ballPosition);
-
+    emit signalFindBall(getBallPosition(&thresholdImage));
 
 //    qDebug("%d", timer.elapsed());
     return thresholdImage;

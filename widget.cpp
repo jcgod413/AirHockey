@@ -9,6 +9,7 @@ Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget),
     imageProcessing(new ImageProcessing),
+    ball(new Ball),
     camera(0),
     imageCapture(0)
 {
@@ -76,6 +77,8 @@ void Widget::initWidget()
 
     connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
             this, SLOT(slotFindBall(QPoint)));
+    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
+            ball, SLOT(slotFindBall(QPoint)));
 }
 
 /**
@@ -232,6 +235,18 @@ void Widget::slotCaptureLoad()
  */
 void Widget::slotFindBall(QPoint ballPosition)
 {
-    ui->ballPositionX->setNum(ballPosition.x());
-    ui->ballPositionY->setNum(ballPosition.y());
+    QString ballPosText;
+
+    if( ballPosition.x() == 0 && ballPosition.y() == 0 )  {
+        ballPosText = "Not found";
+    }
+    else    {
+        ballPosText.append("x : ");
+        ballPosText.append(ballPosText.number(ballPosition.x()));
+        ballPosText.append("\t");
+        ballPosText.append("y : ");
+        ballPosText.append(ballPosText.number(ballPosition.y()));
+    }
+
+    ui->ballPosLabel->setText(ballPosText);
 }

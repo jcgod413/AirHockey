@@ -4,10 +4,10 @@
 #include <QWidget>
 #include <QQueue>
 
-using namespace std;
-
-class Ball
+class Ball : public QWidget
 {
+    Q_OBJECT
+
 public:
     Ball();
     ~Ball();
@@ -21,7 +21,7 @@ signals:
     void signalPredictGradient(double);
 
 public slots:
-    void slotBallFound(QPoint);
+    void slotFindBall(QPoint);
     void slotPredictCourse();
 };
 

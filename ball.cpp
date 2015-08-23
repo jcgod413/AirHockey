@@ -11,7 +11,7 @@ Ball::~Ball()
 
 }
 
-void Ball::slotBallFound(QPoint _ballPosition)
+void Ball::slotFindBall(QPoint _ballPosition)
 {
     ballPosition = _ballPosition;
 
