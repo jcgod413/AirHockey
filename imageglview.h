@@ -56,6 +56,12 @@ private:
 
     QImage frameImage;
 
+    QPoint ballPos;
+    bool ballFound;
+    double ballGradient;
+
+    bool isBallMoving;
+
     int dir[8][2] = { {-1,-1}, {0, -1}, {1, -1}, {1, 0},
                       {1, 1},  {0, 1}, {-1, 1}, {-1, 0}};
 
@@ -74,6 +80,9 @@ public slots:
     void slotSetRectangleBoardArea();
     void slotRectangleReady(bool);
     void slotBoardArea(bool);
+    void slotFindBall(QPoint);
+    void slotPredictGradient(double);
+    void slotBallMoving(bool);
 };
 
 #endif // IMAGEGLVIEW_H

@@ -79,6 +79,13 @@ void Widget::initWidget()
             this, SLOT(slotFindBall(QPoint)));
     connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
             ball, SLOT(slotFindBall(QPoint)));
+    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
+            imageGLView, SLOT(slotFindBall(QPoint)));
+
+    connect(ball, SIGNAL(signalPredictGradient(double)),
+            imageGLView, SLOT(slotPredictGradient(double)));
+    connect(ball, SIGNAL(signalBallMoving(bool)),
+            imageGLView, SLOT(slotBallMoving(bool)));
 }
 
 /**
@@ -123,7 +130,7 @@ void Widget::slotThreadStart()
        ui->resetColorButton->setEnabled(true);
        ui->setBoardAreaButton->setEnabled(true);
        ui->setBoardRectangleButton->setEnabled(true);
-       ui->morpologyEnableCheck->setEnabled(false);
+       ui->morpologyEnableCheck->setEnabled(true);
    }
 }
 

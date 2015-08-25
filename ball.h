@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QQueue>
+#include <math.h>
 
 class Ball : public QWidget
 {
@@ -16,13 +17,15 @@ private:
     QQueue<QPoint> ballQueue;
     QPoint ballPosition;
     double gradient;
+    double distance;
 
 signals:
     void signalPredictGradient(double);
+    void signalBallMoving(bool);
 
 public slots:
     void slotFindBall(QPoint);
-    void slotPredictCourse();
+    void predictCourse();
 };
 
 #endif // BALL_H

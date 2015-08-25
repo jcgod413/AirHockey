@@ -10,6 +10,10 @@ ImageGLView::ImageGLView(QWidget *parent) :
     isRectangleReady(false),
     isRectangleBoardArea(false),
     isRectangleBoardClick(false),
+    ballFound(false),
+    isBallMoving(false),
+    ballPos(0,0),
+    ballGradient(0.0),
     leftTopX(0),
     leftTopY(0),
     leftBottomX(0),
@@ -120,6 +124,35 @@ void ImageGLView::paintEvent(QPaintEvent *event)
             painter.drawLine(QPoint(rightBottomX, rightBottomY),
                              QPoint(mousePosX, mousePosY));
             break;
+        }
+    }
+
+    if( ballFound ) {
+        painter.setPen(QColor(Qt::red));
+        painter.drawEllipse(ballPos, 5, 5);
+
+        if( isBallMoving )  {
+            // y = ax + b
+            int x = ballPos.x();
+            int y = ballPos.y();
+            double a = ballGradient;
+            double b = y - ((double)x * ballGradient);
+
+            int aimingPoint = (double)(y-b)/a;
+            qDebug("%d %f %f   %d", y, b, ballGradient, aimingPoint);
+
+            // 옆에 벽이 닿는경우
+            if( aimingPoint < rightTopX)    {
+                // x, y, 기울기 값 갱신
+                a *= -1;
+//                x = aimingPoint;
+//                y = a*(double)aimingPoint + b;
+                int endX = aimingPoint;
+                int endY = (a*(double)aimingPoint) + b;
+
+//                qDebug("%d %d   %d %d", x, y, endX, endY);
+                painter.drawLine(QPoint(x, y), QPoint(endX, endY));
+            }
         }
     }
 }
@@ -275,4 +308,38 @@ void ImageGLView::slotBoardArea(bool _isBoardArea)
 void ImageGLView::slotRectangleReady(bool _isRectangleReady)
 {
     isRectangleReady = _isRectangleReady;
+}
+
+/**
+ * @brief ImageGLView::slotFindBall
+ * @param _ballPos
+ */
+void ImageGLView::slotFindBall(QPoint _ballPos)
+{
+    ballPos = _ballPos;
+
+    if( ballPos.x() == 0 && ballPos.y() == 0 )  {
+        ballFound = false;
+    }
+    else    {
+        ballFound = true;
+    }
+}
+
+/**
+ * @brief ImageGLView::slotPredictGradient
+ * @param _ballGradient
+ */
+void ImageGLView::slotPredictGradient(double _ballGradient)
+{
+    ballGradient = _ballGradient;
+}
+
+/**
+ * @brief ImageGLView::slotBallMoving
+ * @param _isBallMoving
+ */
+void ImageGLView::slotBallMoving(bool _isBallMoving)
+{
+    isBallMoving = _isBallMoving;
 }
