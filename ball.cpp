@@ -40,12 +40,13 @@ void Ball::predictCourse()
 {
     QPoint previousBallPosition = ballQueue.first();
 
+    // 정지해있는지 프레임간의 공의 거리 차이를 가지고 판단
 //    distance = sqrt(pow((double)(ballPosition.x() - previousBallPosition.x()), 2.0)
 //                    + pow((double)(ballPosition.y() - previousBallPosition.y()), 2.0));
     distance = abs(ballPosition.x() - previousBallPosition.x())
                 + abs(ballPosition.y() - previousBallPosition.y());
 
-    if( distance > 5 )    {
+    if( distance > 10 )    {
         gradient = (double)(ballPosition.y() - previousBallPosition.y())
                    / (double)(ballPosition.x() - previousBallPosition.x());
 

@@ -135,24 +135,24 @@ void ImageGLView::paintEvent(QPaintEvent *event)
             // y = ax + b
             int x = ballPos.x();
             int y = ballPos.y();
-            double a = ballGradient;
-            double b = y - ((double)x * ballGradient);
+            double a = ballGradient;   // y축이 뒤집어져있어서 음의값을 취함
+            double y_intercept = y - (a * (double)x);
 
-            int aimingPoint = (double)(y-b)/a;
-            qDebug("%d %f %f   %d", y, b, ballGradient, aimingPoint);
+            int aimX;
 
-            // 옆에 벽이 닿는경우
-            if( aimingPoint < rightTopX)    {
-                // x, y, 기울기 값 갱신
-                a *= -1;
-//                x = aimingPoint;
-//                y = a*(double)aimingPoint + b;
-                int endX = aimingPoint;
-                int endY = (a*(double)aimingPoint) + b;
+            aimX = (double)(rightTopY-y_intercept) / a;
+            if( aimX < leftTopX )
+                aimX = leftTopX;
+            if( aimX > rightTopX )
+                aimX = rightTopX;
+            painter.drawLine(QPoint(x, y), QPoint(aimX, rightTopY));
 
-//                qDebug("%d %d   %d %d", x, y, endX, endY);
-                painter.drawLine(QPoint(x, y), QPoint(endX, endY));
-            }
+            aimX = (double)(rightBottomY-y_intercept) / a;
+            if( aimX < leftTopX )
+                aimX = leftTopX;
+            if( aimX > rightTopX )
+                aimX = rightTopX;
+            painter.drawLine(QPoint(x, y), QPoint(aimX, rightBottomY));
         }
     }
 }
