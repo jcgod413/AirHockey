@@ -84,8 +84,8 @@ void Widget::initWidget()
 
     connect(ball, SIGNAL(signalPredictGradient(double)),
             imageGLView, SLOT(slotPredictGradient(double)));
-    connect(ball, SIGNAL(signalBallMoving(bool)),
-            imageGLView, SLOT(slotBallMoving(bool)));
+    connect(ball, SIGNAL(signalBallMoving(bool, BallDirection)),
+            imageGLView, SLOT(slotBallMoving(bool, BallDirection)));
 }
 
 /**

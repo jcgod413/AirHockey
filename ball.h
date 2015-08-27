@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QQueue>
 #include <math.h>
+#include "ahr.h"
 
 class Ball : public QWidget
 {
@@ -21,7 +22,7 @@ private:
 
 signals:
     void signalPredictGradient(double);
-    void signalBallMoving(bool);
+    void signalBallMoving(bool, BallDirection);
 
 public slots:
     void slotFindBall(QPoint);

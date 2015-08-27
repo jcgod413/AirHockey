@@ -15,5 +15,13 @@ enum BoardPosition  {
     RESET_BOARD_AREA
 };
 
+enum BallDirection  {
+    PAUSE,
+    NORTH_EAST,
+    SOUTH_EAST,
+    SOUTH_WEST,
+    NORTH_WEST
+};
+
 #endif // AHR
 

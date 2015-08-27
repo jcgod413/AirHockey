@@ -46,14 +46,32 @@ void Ball::predictCourse()
     distance = abs(ballPosition.x() - previousBallPosition.x())
                 + abs(ballPosition.y() - previousBallPosition.y());
 
+    BallDirection direction;
+
+    if( ballPosition.x() > previousBallPosition.x()
+        && ballPosition.y() > previousBallPosition.y() )    {
+        direction = SOUTH_EAST;
+    }
+    else if( ballPosition.x() > previousBallPosition.x()
+             && ballPosition.y() < previousBallPosition.y() )    {
+        direction = NORTH_EAST;
+    }
+    else if( ballPosition.x() < previousBallPosition.x()
+             && ballPosition.y() < previousBallPosition.y() )    {
+        direction = NORTH_WEST;
+    }
+    else    {
+        direction = SOUTH_WEST;
+    }
+
     if( distance > 10 )    {
         gradient = (double)(ballPosition.y() - previousBallPosition.y())
                    / (double)(ballPosition.x() - previousBallPosition.x());
 
         emit signalPredictGradient(gradient);
-        emit signalBallMoving(true);
+        emit signalBallMoving(true, direction);
     }
     else    {
-        emit signalBallMoving(false);
+        emit signalBallMoving(false, PAUSE);
     }
 }

@@ -138,21 +138,38 @@ void ImageGLView::paintEvent(QPaintEvent *event)
             double a = ballGradient;   // y축이 뒤집어져있어서 음의값을 취함
             double y_intercept = y - (a * (double)x);
 
-            int aimX;
+            QPoint aimPoint;
 
-            aimX = (double)(rightTopY-y_intercept) / a;
-            if( aimX < leftTopX )
-                aimX = leftTopX;
-            if( aimX > rightTopX )
-                aimX = rightTopX;
-            painter.drawLine(QPoint(x, y), QPoint(aimX, rightTopY));
-
-            aimX = (double)(rightBottomY-y_intercept) / a;
-            if( aimX < leftTopX )
-                aimX = leftTopX;
-            if( aimX > rightTopX )
-                aimX = rightTopX;
-            painter.drawLine(QPoint(x, y), QPoint(aimX, rightBottomY));
+            if( ballDirection == NORTH_EAST || ballDirection == NORTH_WEST )    {
+                aimPoint.setX((double)(rightTopY-y_intercept) / a);
+                if( aimPoint.x() > rightTopX )  {
+                    aimPoint.setX(rightTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                }
+                else if( aimPoint.x() < leftTopX ) {
+                    aimPoint.setX(leftTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                }
+                else    {
+                    aimPoint.setY(rightTopY);
+                }
+                painter.drawLine(ballPos, aimPoint);
+            }
+            else if( ballDirection == SOUTH_EAST || ballDirection == SOUTH_WEST )   {
+                aimPoint.setX((double)(rightBottomY-y_intercept) / a);
+                if( aimPoint.x() > rightTopX )  {
+                    aimPoint.setX(rightTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                }
+                else if( aimPoint.x() < leftTopX ) {
+                    aimPoint.setX(leftTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                }
+                else    {
+                    aimPoint.setY(rightBottomY);
+                }
+                painter.drawLine(ballPos, aimPoint);
+            }
         }
     }
 }
@@ -338,8 +355,11 @@ void ImageGLView::slotPredictGradient(double _ballGradient)
 /**
  * @brief ImageGLView::slotBallMoving
  * @param _isBallMoving
+ * @param _ballDirection
  */
-void ImageGLView::slotBallMoving(bool _isBallMoving)
+void ImageGLView::slotBallMoving(bool _isBallMoving, BallDirection _ballDirection)
 {
     isBallMoving = _isBallMoving;
+
+    ballDirection = _ballDirection;
 }

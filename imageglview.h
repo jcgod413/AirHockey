@@ -61,6 +61,7 @@ private:
     double ballGradient;
 
     bool isBallMoving;
+    BallDirection ballDirection;
 
     int dir[8][2] = { {-1,-1}, {0, -1}, {1, -1}, {1, 0},
                       {1, 1},  {0, 1}, {-1, 1}, {-1, 0}};
@@ -82,7 +83,7 @@ public slots:
     void slotBoardArea(bool);
     void slotFindBall(QPoint);
     void slotPredictGradient(double);
-    void slotBallMoving(bool);
+    void slotBallMoving(bool, BallDirection);
 };
 
 #endif // IMAGEGLVIEW_H
