@@ -135,40 +135,75 @@ void ImageGLView::paintEvent(QPaintEvent *event)
             // y = ax + b
             int x = ballPos.x();
             int y = ballPos.y();
-            double a = ballGradient;   // y축이 뒤집어져있어서 음의값을 취함
-            double y_intercept = y - (a * (double)x);
 
-            QPoint aimPoint;
+            int count = 0;
+            double a = ballGradient;
 
-            if( ballDirection == NORTH_EAST || ballDirection == NORTH_WEST )    {
-                aimPoint.setX((double)(rightTopY-y_intercept) / a);
-                if( aimPoint.x() > rightTopX )  {
-                    aimPoint.setX(rightTopX);
-                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+            while(true) {
+                QPoint aimPoint;
+
+                if( count++ == 3 )
+                    break;
+                double y_intercept = y - (a * (double)x);
+
+                if( ballDirection == NORTH_EAST || ballDirection == NORTH_WEST )    {
+                    aimPoint.setX((double)(rightTopY-y_intercept) / a);
+
+                    if( aimPoint.x() > rightTopX )  {
+                        aimPoint.setX(rightTopX);
+                        aimPoint.setY(a * aimPoint.x() + y_intercept);
+                        painter.drawLine(QPoint(x, y), aimPoint);
+                        break;
+                    }
+                    else if( aimPoint.x() < leftTopX ) {
+                        aimPoint.setX(leftTopX);
+                        aimPoint.setY(a * aimPoint.x() + y_intercept);
+                        painter.drawLine(QPoint(x, y), aimPoint);
+                        break;
+                    }
+                    else    {
+                        aimPoint.setY(rightTopY);
+                        painter.drawLine(QPoint(x, y), aimPoint);
+                        a *= -1;
+
+                        x = aimPoint.x();
+                        y = aimPoint.y();
+
+                        if( ballDirection == NORTH_EAST )
+                            ballDirection = SOUTH_EAST;
+                        else
+                            ballDirection = SOUTH_WEST;
+                    }
                 }
-                else if( aimPoint.x() < leftTopX ) {
-                    aimPoint.setX(leftTopX);
-                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                else if( ballDirection == SOUTH_EAST || ballDirection == SOUTH_WEST )   {
+                    aimPoint.setX((double)(rightBottomY-y_intercept) / a);
+
+                    if( aimPoint.x() > rightTopX )  {
+                        aimPoint.setX(rightTopX);
+                        aimPoint.setY(a * aimPoint.x() + y_intercept);
+                        painter.drawLine(QPoint(x, y), aimPoint);
+                        break;
+                    }
+                    else if( aimPoint.x() < leftTopX ) {
+                        aimPoint.setX(leftTopX);
+                        aimPoint.setY(a * aimPoint.x() + y_intercept);
+                        painter.drawLine(QPoint(x, y), aimPoint);
+                        break;
+                    }
+                    else    {
+                        aimPoint.setY(rightBottomY);
+                        painter.drawLine(QPoint(x, y), aimPoint);
+                        a *= -1;
+
+                        x = aimPoint.x();
+                        y = aimPoint.y();
+
+                        if( ballDirection == SOUTH_EAST )
+                            ballDirection = NORTH_EAST;
+                        else
+                            ballDirection = NORTH_WEST;
+                    }
                 }
-                else    {
-                    aimPoint.setY(rightTopY);
-                }
-                painter.drawLine(ballPos, aimPoint);
-            }
-            else if( ballDirection == SOUTH_EAST || ballDirection == SOUTH_WEST )   {
-                aimPoint.setX((double)(rightBottomY-y_intercept) / a);
-                if( aimPoint.x() > rightTopX )  {
-                    aimPoint.setX(rightTopX);
-                    aimPoint.setY(a * aimPoint.x() + y_intercept);
-                }
-                else if( aimPoint.x() < leftTopX ) {
-                    aimPoint.setX(leftTopX);
-                    aimPoint.setY(a * aimPoint.x() + y_intercept);
-                }
-                else    {
-                    aimPoint.setY(rightBottomY);
-                }
-                painter.drawLine(ballPos, aimPoint);
             }
         }
     }
