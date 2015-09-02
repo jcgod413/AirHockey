@@ -17,13 +17,15 @@ SOURCES += main.cpp\
     imageglview.cpp \
     capturethread.cpp \
     imageprocessing.cpp \
-    ball.cpp
+    ball.cpp \
+    morphology.cpp
 
 HEADERS  += widget.h \
     imageglview.h \
     capturethread.h \
     ahr.h \
     imageprocessing.h \
-    ball.h
+    ball.h \
+    morphology.h
 
 FORMS    += widget.ui
