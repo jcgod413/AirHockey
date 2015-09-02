@@ -2,6 +2,7 @@
 
 ImageProcessing::ImageProcessing(QObject *parent) :
     QObject(parent),
+    ball(new Ball),
     ballColor(new QColor(0, 0, 255)),
     isBoardAreaReady(false),
     redMax(0),
@@ -23,7 +24,10 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     dilateNum(1),
     enableMorpology(false)
 {
-
+    connect(ball, SIGNAL(signalPredictGradient(double)),
+            this, SLOT(slotPredictGradient(double)));
+    connect(ball, SIGNAL(signalBallMoving(bool,BallDirection)),
+            this, SLOT(slotBallMoving(bool,BallDirection)));
 }
 
 /**
@@ -100,7 +104,11 @@ QImage ImageProcessing::getThresholdImage()
             dilate(thresholdImage);
     }
 
-    emit signalFindBall(getBallPosition(&thresholdImage));
+
+    ballPos = getBallPosition(&thresholdImage);
+
+    ball->slotFindBall(ballPos);
+    emit signalFindBall(ballPos);
 
 //    qDebug("%d", timer.elapsed());
     return thresholdImage;
@@ -318,6 +326,26 @@ void ImageProcessing::slotMorpologyEnable(bool check)
 {
     enableMorpology = check;
 }
+
+/**
+ * @brief ImageProcessing::slotPredictGradient
+ * @param ballGradient
+ */
+void ImageProcessing::slotPredictGradient(double ballGradient)
+{
+    emit signalPredictGradient(ballGradient);
+}
+
+/**
+ * @brief ImageProcessing::slotBallMoving
+ * @param isBallMoving
+ * @param ballDirection
+ */
+void ImageProcessing::slotBallMoving(bool isBallMoving, BallDirection ballDirection)
+{
+    emit signalBallMoving(isBallMoving, ballDirection);
+}
+
 
 /**
  * @brief ImageProcessing::erode
@@ -595,46 +623,3 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
                   (maxOutline.leftUpSide.y() + maxOutline.rightDownSide.y()) / 2);
 
 }
-
-/**
- * @brief ImageProcessing::searchGroup
- * @param groupNum
- * @param point
- * @param minPoint
- * @param maxPoint
- */
-inline void ImageProcessing::searchGroup(int groupNum,
-                                  QPoint point,
-                                  QPoint *minPoint,
-                                  QPoint *maxPoint)
-{
-    int x = point.x();
-    int y = point.y();
-
-    label[y][x] = groupNum;
-//    groupCnt++;
-
-    for(int i=0; i<8; i++)  {
-        x = point.x() + dir[i][0];
-        y = point.y() + dir[i][1];
-
-        int loc = y*2560 + x*4;
-        QColor *color =  new QColor(imageData[loc+2],
-                                    imageData[loc+1],
-                                    imageData[loc],
-                                    255);
-
-        if( color->value()==ballColor->value() && label[y][x] == 0 )  {
-            if( x > maxPoint->x() )    maxPoint->setX(x);
-            if( x < minPoint->x() )    minPoint->setX(x);
-            if( y > maxPoint->y() )    maxPoint->setY(y);
-            if( y > minPoint->y() )    minPoint->setY(y);
-
-            searchGroup(groupNum, QPoint(x, y),
-                        minPoint, maxPoint);
-        }
-
-        delete color;
-    }
-}
-

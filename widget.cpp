@@ -9,7 +9,6 @@ Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget),
     imageProcessing(new ImageProcessing),
-    ball(new Ball),
     camera(0),
     imageCapture(0)
 {
@@ -76,16 +75,14 @@ void Widget::initWidget()
             imageGLView, SLOT(slotBoardArea(bool)));
 
     connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
-            this, SLOT(slotFindBall(QPoint)));
-    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
-            ball, SLOT(slotFindBall(QPoint)));
-    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
             imageGLView, SLOT(slotFindBall(QPoint)));
 
-    connect(ball, SIGNAL(signalPredictGradient(double)),
+    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
+            this, SLOT(slotFindBall(QPoint)));
+    connect(imageProcessing, SIGNAL(signalPredictGradient(double)),
             imageGLView, SLOT(slotPredictGradient(double)));
-    connect(ball, SIGNAL(signalBallMoving(bool, BallDirection)),
-            imageGLView, SLOT(slotBallMoving(bool, BallDirection)));
+    connect(imageProcessing, SIGNAL(signalBallMoving(bool,BallDirection)),
+            imageGLView, SLOT(slotBallMoving(bool,BallDirection)));
 }
 
 /**

@@ -127,24 +127,23 @@ void ImageGLView::paintEvent(QPaintEvent *event)
         }
     }
 
-    if( ballFound ) {
+    if( ballFound == true ) {
         painter.setPen(QColor(Qt::red));
         painter.drawEllipse(ballPos, 5, 5);
 
-        if( isBallMoving )  {
+        if( isBallMoving == true )  {
             // y = ax + b
             int x = ballPos.x();
             int y = ballPos.y();
 
-            int count = 0;
+            QPoint aimPoint;
+            int collisionCount = 0;
             double a = ballGradient;
 
             while(true) {
-                QPoint aimPoint;
-
-                if( count++ == 3 )
-                    break;
                 double y_intercept = y - (a * (double)x);
+                if( ++collisionCount == 3 )
+                    break;
 
                 if( ballDirection == NORTH_EAST || ballDirection == NORTH_WEST )    {
                     aimPoint.setX((double)(rightTopY-y_intercept) / a);
@@ -164,8 +163,8 @@ void ImageGLView::paintEvent(QPaintEvent *event)
                     else    {
                         aimPoint.setY(rightTopY);
                         painter.drawLine(QPoint(x, y), aimPoint);
-                        a *= -1;
 
+                        a *= -1;
                         x = aimPoint.x();
                         y = aimPoint.y();
 
@@ -193,8 +192,8 @@ void ImageGLView::paintEvent(QPaintEvent *event)
                     else    {
                         aimPoint.setY(rightBottomY);
                         painter.drawLine(QPoint(x, y), aimPoint);
-                        a *= -1;
 
+                        a *= -1;
                         x = aimPoint.x();
                         y = aimPoint.y();
 

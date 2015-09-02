@@ -9,6 +9,7 @@
 #include <QPoint>
 #include <QColor>
 #include "ahr.h"
+#include "ball.h"
 
 class ImageProcessing : public QObject
 {
@@ -22,11 +23,11 @@ public:
     QImage getThresholdImage();
     void getBoundX(int y, int &startX, int &endX);
     QPoint getBallPosition(QImage *frameImage);
-    inline void searchGroup(int groupNum, QPoint point,
-                     QPoint *minPoint, QPoint *maxPoint);
 
 private:
+    Ball *ball;
     QImage rawImage;
+    QPoint ballPos;
 
     int toleranceBand;  // Mask Color 오차 범위
 
@@ -74,6 +75,8 @@ signals:
     void signalRectangleReady(bool);
     void signalBoardArea(bool);
     void signalFindBall(QPoint);
+    void signalPredictGradient(double);
+    void signalBallMoving(bool,BallDirection);
 
 public slots:
     void slotDraggedImage(int, int);
@@ -81,6 +84,8 @@ public slots:
     void slotBoardAreaPoint(int, int, int);
     void slotMorpologyEnable(bool);
     void slotBoardAreaReady(bool);
+    void slotPredictGradient(double);
+    void slotBallMoving(bool,BallDirection);
 };
 
 #endif // IMAGEPROCESSING_H

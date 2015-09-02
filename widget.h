@@ -38,7 +38,6 @@ private:
     ImageGLView *imageGLView;
     ImageProcessing *imageProcessing;
     CaptureThread *captureThread;
-    Ball *ball;
 
 
 public slots:
