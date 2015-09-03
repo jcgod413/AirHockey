@@ -10,7 +10,6 @@
 #include <QColor>
 #include "ahr.h"
 #include "ball.h"
-#include "morphology.h"
 
 class ImageProcessing : public QObject
 {
@@ -22,10 +21,10 @@ public:
     QImage getThresholdImage();
     void getBoundX(int y, int &startX, int &endX);
     QPoint getBallPosition(QImage *frameImage);
+    void initImageProcessing();
 
 private:
     Ball *ball;
-    Morphology *morpology;
     QImage rawImage;
     QPoint ballPos;
 

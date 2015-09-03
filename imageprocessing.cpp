@@ -3,7 +3,6 @@
 ImageProcessing::ImageProcessing(QObject *parent) :
     QObject(parent),
     ball(new Ball),
-    morpology(new Morphology),
     ballColor(new QColor(0, 0, 255)),
     isBoardAreaReady(false),
     redMax(0),
@@ -25,10 +24,7 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     dilateNum(1),
     enableMorpology(false)
 {
-    connect(ball, SIGNAL(signalPredictGradient(double)),
-            this, SLOT(slotPredictGradient(double)));
-    connect(ball, SIGNAL(signalBallMoving(bool,BallDirection)),
-            this, SLOT(slotBallMoving(bool,BallDirection)));
+    initImageProcessing();
 }
 
 /**
@@ -37,6 +33,17 @@ ImageProcessing::ImageProcessing(QObject *parent) :
 ImageProcessing::~ImageProcessing()
 {
 
+}
+
+/**
+ * @brief ImageProcessing::initImageProcessing
+ */
+void ImageProcessing::initImageProcessing()
+{
+    connect(ball, SIGNAL(signalPredictGradient(double)),
+            this, SLOT(slotPredictGradient(double)));
+    connect(ball, SIGNAL(signalBallMoving(bool,BallDirection)),
+            this, SLOT(slotBallMoving(bool,BallDirection)));
 }
 
 /**
@@ -99,7 +106,7 @@ QImage ImageProcessing::getThresholdImage()
     }
 
     if( enableMorpology )   {
-        morpology->applyMorphology(thresholdImage);
+//        morpology->applyMorphology(thresholdImage);
     }
 
 
