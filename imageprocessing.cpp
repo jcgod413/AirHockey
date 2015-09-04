@@ -362,11 +362,11 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
     if( !isBoardAreaReady )
         return QPoint(0, 0);    // Board area not ready
 
+    int x;
+    int y;
     int max = 0;
     int maxIndex = 0;
     int groupNum = 1;
-    int x;
-    int y;
 
     Outline maxOutline;
     Outline *outline = new Outline[groupNum];

@@ -62,6 +62,7 @@ private:
 
     bool isBallMoving;
     BallDirection ballDirection;
+    RobotDirection robotDirection;
 
     int dir[8][2] = { {-1,-1}, {0, -1}, {1, -1}, {1, 0},
                       {1, 1},  {0, 1}, {-1, 1}, {-1, 0}};
@@ -84,6 +85,7 @@ public slots:
     void slotFindBall(QPoint);
     void slotPredictGradient(double);
     void slotBallMoving(bool, BallDirection);
+    void slotRobotDirectionChanged(int);
 };
 
 #endif // IMAGEGLVIEW_H

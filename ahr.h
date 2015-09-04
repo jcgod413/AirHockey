@@ -23,5 +23,10 @@ enum BallDirection  {
     NORTH_WEST
 };
 
+enum RobotDirection {
+    LEFT_SIDE,
+    RIGHT_SIDE
+};
+
 #endif // AHR
 

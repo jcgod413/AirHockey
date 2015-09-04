@@ -62,6 +62,7 @@ void ImageGLView::paintEvent(QPaintEvent *event)
     if( frameImage.isNull() )   return;
 
     QPainter painter;
+    QRect rectDrawArea(startX, startY, endX-startX, endY-startY);
 
     painter.begin(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -83,8 +84,6 @@ void ImageGLView::paintEvent(QPaintEvent *event)
         startY = 0;
         endY   = painterHeight;
     }
-
-    QRect rectDrawArea(startX, startY, endX-startX, endY-startY);
 
     painter.drawImage(rectDrawArea, frameImage);
 
@@ -396,4 +395,13 @@ void ImageGLView::slotBallMoving(bool _isBallMoving, BallDirection _ballDirectio
     isBallMoving = _isBallMoving;
 
     ballDirection = _ballDirection;
+}
+
+/**
+ * @brief ImageGLView::slotRobotDirectionChanged
+ * @param robotDirection
+ */
+void ImageGLView::slotRobotDirectionChanged(int robotDirection)
+{
+    this->robotDirection = (RobotDirection)robotDirection;
 }

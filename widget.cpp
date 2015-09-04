@@ -50,6 +50,8 @@ void Widget::initWidget()
                             SLOT(slotCameraStop()));
     connect(ui->captureButton, SIGNAL(clicked()),
                                SLOT(slotCameraCapture()));
+    connect(ui->robotDirectionSlider, SIGNAL(valueChanged(int)),
+            imageGLView, SLOT(slotRobotDirectionChanged(int)));
 
     connect(ui->resetColorButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotResetMaskColor()));
@@ -121,13 +123,13 @@ void Widget::slotThreadStart()
 {
    if( !captureThread->isRunning() )    {
        captureThread->start();
-       ui->startButton->setEnabled(false);
        ui->stopButton->setEnabled(true);
+       ui->startButton->setEnabled(false);
        ui->captureButton->setEnabled(true);
        ui->resetColorButton->setEnabled(true);
        ui->setBoardAreaButton->setEnabled(true);
-       ui->setBoardRectangleButton->setEnabled(true);
        ui->morpologyEnableCheck->setEnabled(true);
+       ui->setBoardRectangleButton->setEnabled(true);
    }
 }
 
