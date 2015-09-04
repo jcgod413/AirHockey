@@ -76,15 +76,8 @@ void Widget::initWidget()
     connect(imageProcessing, SIGNAL(signalBoardArea(bool)),
             imageGLView, SLOT(slotBoardArea(bool)));
 
-    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
-            imageGLView, SLOT(slotFindBall(QPoint)));
-
-    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
-            this, SLOT(slotFindBall(QPoint)));
-    connect(imageProcessing, SIGNAL(signalPredictGradient(double)),
-            imageGLView, SLOT(slotPredictGradient(double)));
-    connect(imageProcessing, SIGNAL(signalBallMoving(bool,BallDirection)),
-            imageGLView, SLOT(slotBallMoving(bool,BallDirection)));
+//    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
+//            this, SLOT(slotFindBall(QPoint)));
 }
 
 /**
@@ -229,30 +222,29 @@ void Widget::slotCaptureLoad()
     QRect rect(0, 0, viewFinder->width(), viewFinder->height());
     QPixmap captureImage = viewFinder->grab(rect).scaled(640, 480);
     QImage frameImage = captureImage.toImage();
+    QImage resultImage = imageProcessing->imageProcess(&frameImage);
 
-    imageProcessing->loadRawImage(frameImage);
-
-    imageGLView->imageLoad(imageProcessing->getThresholdImage());
+    imageGLView->imageLoad(resultImage);
 }
 
 /**
  * @brief Widget::slotFindBall
  * @param ballPosition
  */
-void Widget::slotFindBall(QPoint ballPosition)
-{
-    QString ballPosText;
+//void Widget::slotFindBall(QPoint ballPosition)
+//{
+//    QString ballPosText;
 
-    if( ballPosition.x() == 0 && ballPosition.y() == 0 )  {
-        ballPosText = "Not found";
-    }
-    else    {
-        ballPosText.append("x : ");
-        ballPosText.append(ballPosText.number(ballPosition.x()));
-        ballPosText.append("\t");
-        ballPosText.append("y : ");
-        ballPosText.append(ballPosText.number(ballPosition.y()));
-    }
+//    if( ballPosition.x() == 0 && ballPosition.y() == 0 )  {
+//        ballPosText = "Not found";
+//    }
+//    else    {
+//        ballPosText.append("x : ");
+//        ballPosText.append(ballPosText.number(ballPosition.x()));
+//        ballPosText.append("\t");
+//        ballPosText.append("y : ");
+//        ballPosText.append(ballPosText.number(ballPosition.y()));
+//    }
 
-    ui->ballPosLabel->setText(ballPosText);
-}
+//    ui->ballPosLabel->setText(ballPosText);
+//}

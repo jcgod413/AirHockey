@@ -8,6 +8,7 @@
 #include <QElapsedTimer>
 #include <QPoint>
 #include <QColor>
+#include <QPainter>
 #include "ahr.h"
 #include "ball.h"
 
@@ -17,22 +18,25 @@ class ImageProcessing : public QObject
 public:
     explicit ImageProcessing(QObject *parent = 0);
     ~ImageProcessing();
-    void loadRawImage(QImage);
-    QImage getThresholdImage();
+    void getThresholdImage(QImage*);
     void getBoundX(int y, int &startX, int &endX);
     QPoint getBallPosition(QImage *frameImage);
     void initImageProcessing();
+    QImage imageProcess(QImage*);
+    void erode(QImage*);
+    void dilate(QImage*);
+    void predictCourse(QImage*);
 
 private:
     Ball *ball;
-    QImage rawImage;
     QPoint ballPos;
+    QImage rawImage;
 
     int toleranceBand;  // Mask Color 오차 범위
 
     int label[SCREEN_HEIGHT][SCREEN_WIDTH];
     int dir[8][2] = { {0, -1}, {-1,-1}, {-1, 0}, {-1, 1}, 
-                      {1, -1}, {1, 0}, {1, 1},  {0, 1}};
+                      {1, -1}, {1, 0}, {1, 1},  {0, 1} };
     struct Outline  {
         QPoint leftUpSide;
         QPoint rightDownSide;
@@ -73,9 +77,6 @@ private:
 signals:
     void signalRectangleReady(bool);
     void signalBoardArea(bool);
-    void signalFindBall(QPoint);
-    void signalPredictGradient(double);
-    void signalBallMoving(bool,BallDirection);
 
 public slots:
     void slotDraggedImage(int, int);
@@ -83,8 +84,6 @@ public slots:
     void slotBoardAreaPoint(int, int, int);
     void slotMorpologyEnable(bool);
     void slotBoardAreaReady(bool);
-    void slotPredictGradient(double);
-    void slotBallMoving(bool,BallDirection);
 };
 
 #endif // IMAGEPROCESSING_H

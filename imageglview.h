@@ -82,9 +82,6 @@ public slots:
     void slotSetRectangleBoardArea();
     void slotRectangleReady(bool);
     void slotBoardArea(bool);
-    void slotFindBall(QPoint);
-    void slotPredictGradient(double);
-    void slotBallMoving(bool, BallDirection);
     void slotRobotDirectionChanged(int);
 };
 

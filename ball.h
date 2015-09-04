@@ -13,20 +13,17 @@ class Ball : public QWidget
 public:
     Ball();
     ~Ball();
+    void find(QPoint);
+    void updateInfo();
+
+    bool isMoving;
+    double gradient;
+    double distance;
+    BallDirection direction;
 
 private:
     QQueue<QPoint> ballQueue;
     QPoint ballPosition;
-    double gradient;
-    double distance;
-
-signals:
-    void signalPredictGradient(double);
-    void signalBallMoving(bool, BallDirection);
-
-public slots:
-    void slotFindBall(QPoint);
-    void predictCourse();
 };
 
 #endif // BALL_H

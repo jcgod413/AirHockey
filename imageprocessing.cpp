@@ -5,6 +5,7 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     ball(new Ball),
     ballColor(new QColor(0, 0, 255)),
     isBoardAreaReady(false),
+    enableMorpology(false),
     redMax(0),
     greenMax(0),
     blueMax(0),
@@ -21,8 +22,7 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     rightBottomY(0),
     toleranceBand(5),
     erodeNum(2),
-    dilateNum(1),
-    enableMorpology(false)
+    dilateNum(1)
 {
     initImageProcessing();
 }
@@ -40,30 +40,48 @@ ImageProcessing::~ImageProcessing()
  */
 void ImageProcessing::initImageProcessing()
 {
-    connect(ball, SIGNAL(signalPredictGradient(double)),
-            this, SLOT(slotPredictGradient(double)));
-    connect(ball, SIGNAL(signalBallMoving(bool,BallDirection)),
-            this, SLOT(slotBallMoving(bool,BallDirection)));
+
 }
 
 /**
- * @brief ImageProcessing::loadRawImage
+ * @brief ImageProcessing::imageProcess
  * @param rawImage
+ * @return
  */
-void ImageProcessing::loadRawImage(QImage rawImage)
+QImage ImageProcessing::imageProcess(QImage *rawImage)
 {
-    this->rawImage = rawImage;
+    this->rawImage = *rawImage;
+    QImage resultImage;
+
+    // threshold
+    getThresholdImage(&resultImage);
+
+    // morpology
+    if( enableMorpology )   {
+        for(int i=0; i<erodeNum; i++)
+            erode(&resultImage);
+        for(int i=0; i<dilateNum; i++)
+            dilate(&resultImage);
+    }
+
+    // get ball position
+    ball->find(ballPos = getBallPosition(&resultImage));
+    ball->updateInfo();
+
+    // predict
+    predictCourse(&resultImage);
+
+    // tracking
+
+    return resultImage;
 }
 
 /**
  * @brief ImageProcessing::getThresholdImage
- * @return
+ * @param dstImage
  */
-QImage ImageProcessing::getThresholdImage()
+void ImageProcessing::getThresholdImage(QImage *dstImage)
 {
-    QElapsedTimer timer;
-    timer.start();
-
     int boundStartY = (leftTopY<rightTopY)
                      ? leftTopY
                      : rightTopY;
@@ -71,9 +89,8 @@ QImage ImageProcessing::getThresholdImage()
                     ? leftBottomY
                     : rightBottomY;
 
-    QImage thresholdImage = rawImage;
-
-    imageData = thresholdImage.bits();
+    *dstImage = rawImage;
+    imageData = dstImage->bits();
 
     if( isBoardAreaReady )  {
         for(int i=boundStartY; i<boundEndY; i++)    {
@@ -104,19 +121,6 @@ QImage ImageProcessing::getThresholdImage()
             }
         }
     }
-
-    if( enableMorpology )   {
-//        morpology->applyMorphology(thresholdImage);
-    }
-
-
-    ballPos = getBallPosition(&thresholdImage);
-
-    ball->slotFindBall(ballPos);
-    emit signalFindBall(ballPos);
-
-//    qDebug("%d", timer.elapsed());
-    return thresholdImage;
 }
 
 /**
@@ -268,9 +272,13 @@ void ImageProcessing::slotResetMaskColor()
     redMin = greenMin = blueMin = 255;
 }
 
-void ImageProcessing::slotBoardAreaReady(bool _isBoardAreaReady)
+/**
+ * @brief ImageProcessing::slotBoardAreaReady
+ * @param isBoardAreaReady
+ */
+void ImageProcessing::slotBoardAreaReady(bool isBoardAreaReady)
 {
-    isBoardAreaReady = _isBoardAreaReady;
+    this->isBoardAreaReady = isBoardAreaReady;
 }
 
 /**
@@ -331,26 +339,6 @@ void ImageProcessing::slotMorpologyEnable(bool check)
 {
     enableMorpology = check;
 }
-
-/**
- * @brief ImageProcessing::slotPredictGradient
- * @param ballGradient
- */
-void ImageProcessing::slotPredictGradient(double ballGradient)
-{
-    emit signalPredictGradient(ballGradient);
-}
-
-/**
- * @brief ImageProcessing::slotBallMoving
- * @param isBallMoving
- * @param ballDirection
- */
-void ImageProcessing::slotBallMoving(bool isBallMoving, BallDirection ballDirection)
-{
-    emit signalBallMoving(isBallMoving, ballDirection);
-}
-
 
 /**
  * @brief ImageProcessing::getBallPosition
@@ -454,10 +442,264 @@ QPoint ImageProcessing::getBallPosition(QImage *frameImage)
             }
 
             delete color;
-        }   
+        }
     }
 
     return QPoint((maxOutline.leftUpSide.x() + maxOutline.rightDownSide.x()) / 2,
                   (maxOutline.leftUpSide.y() + maxOutline.rightDownSide.y()) / 2);
+}
 
+/**
+ * @brief ImageProcessing::erode
+ * @param sourceImage
+ */
+void ImageProcessing::erode(QImage *sourceImage)
+{
+    if( !isBoardAreaReady )
+        return;
+
+    int end = SCREEN_WIDTH*SCREEN_HEIGHT*4;
+    bool check[end];
+    memset(check, false, sizeof(check));
+
+    int boundStartY = (leftTopY<rightTopY)
+                     ? leftTopY
+                     : rightTopY;
+    int boundEndY = (leftBottomY>rightBottomY)
+                    ? leftBottomY
+                    : rightBottomY;
+
+    imageData = sourceImage->bits();
+    rawImageData = rawImage.bits();
+
+    for(int i=boundStartY; i<boundEndY; i++)    {
+        int boundStartX;
+        int boundEndX;
+
+        getBoundX(i, boundStartX, boundEndX);
+
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
+
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
+
+            unsigned char blue = imageData[loc];
+            unsigned char green = imageData[loc+1];
+            unsigned char red = imageData[loc+2];
+
+            if( !(blue == ballColor->blue()
+                  && red == ballColor->red()
+                  && green == ballColor->green()) )
+            {
+                for(int k=0; k<8; k++)  {
+
+                    int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
+
+                    unsigned char _blue = imageData[_loc];
+                    unsigned char _green = imageData[_loc+1];
+                    unsigned char _red = imageData[_loc+2];
+
+                    if( _blue == ballColor->blue()
+                        && _red == ballColor->red()
+                        && _green == ballColor->green() )
+                    {
+                        check[_loc] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i=boundStartY; i<boundEndY; i++)   {
+        int boundStartX;
+        int boundEndX;
+
+        getBoundX(i, boundStartX, boundEndX);
+
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
+
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
+            if( check[loc] == true )    {
+                imageData[loc] = rawImageData[loc];
+                imageData[loc+1] = rawImageData[loc+1];
+                imageData[loc+2] = rawImageData[loc+2];
+                imageData[loc+3] = rawImageData[loc+3];
+            }
+        }
+    }
+}
+
+/**
+ * @brief ImageProcessing::dilate
+ * @param sourceImage
+ */
+void ImageProcessing::dilate(QImage *sourceImage)
+{
+    if( !isBoardAreaReady )
+        return;
+
+    int end = SCREEN_WIDTH*SCREEN_HEIGHT*4;
+    bool check[end];
+    memset(check, false, sizeof(check));
+
+    int boundStartY = (leftTopY<rightTopY)
+                     ? leftTopY
+                     : rightTopY;
+    int boundEndY = (leftBottomY>rightBottomY)
+                    ? leftBottomY
+                    : rightBottomY;
+
+    imageData = sourceImage->bits();
+
+    for(int i=boundStartY; i<boundEndY; i++)    {
+        int boundStartX;
+        int boundEndX;
+
+        getBoundX(i, boundStartX, boundEndX);
+
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
+
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
+
+            unsigned char blue = imageData[loc];
+            unsigned char green = imageData[loc+1];
+            unsigned char red = imageData[loc+2];
+
+            if( blue == ballColor->blue()
+                && red == ballColor->red()
+                && green == ballColor->green() )
+            {
+                for(int k=0; k<8; k++)  {
+                    int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
+
+                    unsigned char _blue = imageData[_loc];
+                    unsigned char _green = imageData[_loc+1];
+                    unsigned char _red = imageData[_loc+2];
+
+                    if( !(_blue == ballColor->blue()
+                          && _red == ballColor->red()
+                          && _green == ballColor->green()) ) {
+                        check[_loc] = true;
+                    }
+                }
+            }
+        }
+    }
+
+    for(int i=boundStartY; i<boundEndY; i++)   {
+        int boundStartX;
+        int boundEndX;
+
+        getBoundX(i, boundStartX, boundEndX);
+
+        if( boundStartX < 0 || boundEndX < 0
+            || boundEndX > SCREEN_WIDTH )
+            continue;
+
+        for(int j=boundStartX; j<boundEndX; j++)    {
+            int loc = i*2560 + j*4;
+            if( check[loc] == true )    {
+                imageData[loc] = 255;
+                imageData[loc+1] = 0;
+                imageData[loc+2] = 0;
+                imageData[loc+3] = 255;
+            }
+        }
+    }
+}
+
+void ImageProcessing::predictCourse(QImage *dstImage)
+{
+    QPixmap pix = QPixmap::fromImage(*dstImage);
+    QPainter painter(&pix);
+
+    painter.setPen(QColor(Qt::red));
+    painter.drawEllipse(ballPos, 5, 5);
+
+    if( ball->isMoving == true )  {
+        // y = ax + b
+        int x = ballPos.x();
+        int y = ballPos.y();
+
+        QPoint aimPoint;
+        int collisionCount = 0;
+        double a = ball->gradient;
+
+        while(true) {
+            double y_intercept = y - (a * (double)x);
+            if( ++collisionCount == 3 )
+                break;
+            qDebug("%d", ball->direction);
+
+            if( ball->direction == NORTH_EAST || ball->direction == NORTH_WEST )    {
+                aimPoint.setX((double)(rightTopY-y_intercept) / a);
+
+                if( aimPoint.x() > rightTopX )  {
+                    aimPoint.setX(rightTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                    painter.drawLine(QPoint(x, y), aimPoint);
+                    break;
+                }
+                else if( aimPoint.x() < leftTopX ) {
+                    aimPoint.setX(leftTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                    painter.drawLine(QPoint(x, y), aimPoint);
+                    break;
+                }
+                else    {
+                    aimPoint.setY(rightTopY);
+                    painter.drawLine(QPoint(x, y), aimPoint);
+
+                    a *= -1;
+                    x = aimPoint.x();
+                    y = aimPoint.y();
+
+                    if( ball->direction == NORTH_EAST )
+                        ball->direction = SOUTH_EAST;
+                    else
+                        ball->direction = SOUTH_WEST;
+                }
+            }
+            else if( ball->direction == SOUTH_EAST || ball->direction == SOUTH_WEST )   {
+                aimPoint.setX((double)(rightBottomY-y_intercept) / a);
+
+                if( aimPoint.x() > rightTopX )  {
+                    aimPoint.setX(rightTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                    painter.drawLine(QPoint(x, y), aimPoint);
+                    break;
+                }
+                else if( aimPoint.x() < leftTopX ) {
+                    aimPoint.setX(leftTopX);
+                    aimPoint.setY(a * aimPoint.x() + y_intercept);
+                    painter.drawLine(QPoint(x, y), aimPoint);
+                    break;
+                }
+                else    {
+                    aimPoint.setY(rightBottomY);
+                    painter.drawLine(QPoint(x, y), aimPoint);
+
+                    a *= -1;
+                    x = aimPoint.x();
+                    y = aimPoint.y();
+
+                    if( ball->direction == SOUTH_EAST )
+                        ball->direction = NORTH_EAST;
+                    else
+                        ball->direction = NORTH_WEST;
+                }
+            }
+        }
+//        qDebug("%d  %d", aimPoint.x(), aimPoint.y());
+    }
+
+    *dstImage = pix.toImage();
 }

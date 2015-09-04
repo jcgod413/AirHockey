@@ -125,86 +125,6 @@ void ImageGLView::paintEvent(QPaintEvent *event)
             break;
         }
     }
-
-    if( ballFound == true ) {
-        painter.setPen(QColor(Qt::red));
-        painter.drawEllipse(ballPos, 5, 5);
-
-        if( isBallMoving == true )  {
-            // y = ax + b
-            int x = ballPos.x();
-            int y = ballPos.y();
-
-            QPoint aimPoint;
-            int collisionCount = 0;
-            double a = ballGradient;
-
-            while(true) {
-                double y_intercept = y - (a * (double)x);
-                if( ++collisionCount == 3 )
-                    break;
-
-                if( ballDirection == NORTH_EAST || ballDirection == NORTH_WEST )    {
-                    aimPoint.setX((double)(rightTopY-y_intercept) / a);
-
-                    if( aimPoint.x() > rightTopX )  {
-                        aimPoint.setX(rightTopX);
-                        aimPoint.setY(a * aimPoint.x() + y_intercept);
-                        painter.drawLine(QPoint(x, y), aimPoint);
-                        break;
-                    }
-                    else if( aimPoint.x() < leftTopX ) {
-                        aimPoint.setX(leftTopX);
-                        aimPoint.setY(a * aimPoint.x() + y_intercept);
-                        painter.drawLine(QPoint(x, y), aimPoint);
-                        break;
-                    }
-                    else    {
-                        aimPoint.setY(rightTopY);
-                        painter.drawLine(QPoint(x, y), aimPoint);
-
-                        a *= -1;
-                        x = aimPoint.x();
-                        y = aimPoint.y();
-
-                        if( ballDirection == NORTH_EAST )
-                            ballDirection = SOUTH_EAST;
-                        else
-                            ballDirection = SOUTH_WEST;
-                    }
-                }
-                else if( ballDirection == SOUTH_EAST || ballDirection == SOUTH_WEST )   {
-                    aimPoint.setX((double)(rightBottomY-y_intercept) / a);
-
-                    if( aimPoint.x() > rightTopX )  {
-                        aimPoint.setX(rightTopX);
-                        aimPoint.setY(a * aimPoint.x() + y_intercept);
-                        painter.drawLine(QPoint(x, y), aimPoint);
-                        break;
-                    }
-                    else if( aimPoint.x() < leftTopX ) {
-                        aimPoint.setX(leftTopX);
-                        aimPoint.setY(a * aimPoint.x() + y_intercept);
-                        painter.drawLine(QPoint(x, y), aimPoint);
-                        break;
-                    }
-                    else    {
-                        aimPoint.setY(rightBottomY);
-                        painter.drawLine(QPoint(x, y), aimPoint);
-
-                        a *= -1;
-                        x = aimPoint.x();
-                        y = aimPoint.y();
-
-                        if( ballDirection == SOUTH_EAST )
-                            ballDirection = NORTH_EAST;
-                        else
-                            ballDirection = NORTH_WEST;
-                    }
-                }
-            }
-        }
-    }
 }
 
 /**
@@ -344,57 +264,20 @@ void ImageGLView::slotSetRectangleBoardArea()
 
 /**
  * @brief ImageGLView::slotBoardArea
- * @param _isBoardArea
+ * @param isBoardArea
  */
-void ImageGLView::slotBoardArea(bool _isBoardArea)
+void ImageGLView::slotBoardArea(bool isBoardArea)
 {
-    isBoardArea = _isBoardArea;
+    this->isBoardArea = isBoardArea;
 }
 
 /**
  * @brief ImageGLView::slotRectangleReady
- * @param _isRectangleReady
+ * @param isRectangleReady
  */
-void ImageGLView::slotRectangleReady(bool _isRectangleReady)
+void ImageGLView::slotRectangleReady(bool isRectangleReady)
 {
-    isRectangleReady = _isRectangleReady;
-}
-
-/**
- * @brief ImageGLView::slotFindBall
- * @param _ballPos
- */
-void ImageGLView::slotFindBall(QPoint _ballPos)
-{
-    ballPos = _ballPos;
-
-    if( ballPos.x() == 0 && ballPos.y() == 0 )  {
-        ballFound = false;
-    }
-    else    {
-        ballFound = true;
-    }
-}
-
-/**
- * @brief ImageGLView::slotPredictGradient
- * @param _ballGradient
- */
-void ImageGLView::slotPredictGradient(double _ballGradient)
-{
-    ballGradient = _ballGradient;
-}
-
-/**
- * @brief ImageGLView::slotBallMoving
- * @param _isBallMoving
- * @param _ballDirection
- */
-void ImageGLView::slotBallMoving(bool _isBallMoving, BallDirection _ballDirection)
-{
-    isBallMoving = _isBallMoving;
-
-    ballDirection = _ballDirection;
+    this->isRectangleReady = isRectangleReady;
 }
 
 /**
