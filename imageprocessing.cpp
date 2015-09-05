@@ -6,6 +6,7 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     ballColor(new QColor(0, 0, 255)),
     ballPos(0, 0),
     mousePos(0, 0),
+    predictPoint(0, 0),
     isMouseClick(false),
     isBoardAreaReady(false),
     enableMorpology(false),
@@ -79,6 +80,7 @@ QImage ImageProcessing::imageProcess(QImage *rawImage)
     predictCourse(&resultImage);
 
     // tracking
+    ballTracking();
 
     // draw fence
     drawFence();
@@ -97,6 +99,21 @@ void ImageProcessing::drawFence()
     {
         QPainter painter(&resultImage);
         painter.drawRect(QRect(leftTopPoint, rightBottomPoint));
+    }
+}
+
+/**
+ * @brief ImageProcessing::ballTracking
+ */
+void ImageProcessing::ballTracking()
+{
+    // To Do
+
+    if( robotDirection == LEFT_SIDE )   {
+        // 예상 도달 지점 잡기
+    }
+    else if( robotDirection == RIGHT_SIDE ) {
+
     }
 }
 

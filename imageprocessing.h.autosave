@@ -28,6 +28,7 @@ public:
     void predictCourse(QImage*);
     void drawFence();
     void ballTracking();
+    QPoint predictPoint;
 
 private:
     Ball *ball;
