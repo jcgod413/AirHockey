@@ -34,6 +34,7 @@ private:
     QPoint mousePos;
     QImage rawImage;
     QImage resultImage;
+    RobotDirection robotDirection;
     bool isRectangleBoardMode;
     bool isRectangleGrabbing;
     bool isRectangleReady;
@@ -92,7 +93,6 @@ signals:
 public slots:
     void slotDraggedImage(int, int);
     void slotResetMaskColor();
-    void slotBoardAreaPoint(int, int, int);
     void slotMorpologyEnable(bool);
     void slotBoardAreaReady(bool);
 
@@ -101,6 +101,7 @@ public slots:
     void slotScreenRelease(QPoint);
 
     void slotSetRectangleBoardArea();
+    void slotRobotDirectionChanged(int);
 };
 
 #endif // IMAGEPROCESSING_H

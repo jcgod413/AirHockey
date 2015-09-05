@@ -273,8 +273,6 @@ void ImageProcessing::slotDraggedImage(int x, int y)
     greenMin = (greenMin>green) ? green : greenMin;
     blueMax  = (blueMax<blue) ? blue : blueMax;
     blueMin  = (blueMin>blue) ? blue : blueMin;
-
-    qDebug("%d %d %d", red, green, blue);
 }
 
 /**
@@ -293,56 +291,6 @@ void ImageProcessing::slotResetMaskColor()
 void ImageProcessing::slotBoardAreaReady(bool isBoardAreaReady)
 {
     this->isBoardAreaReady = isBoardAreaReady;
-}
-
-/**
- * @brief ImageProcessing::slotBoardAreaPoint
- * @param boardAreaClick
- * @param x
- * @param y
- */
-void ImageProcessing::slotBoardAreaPoint(int boardAreaClick, int x, int y)
-{
-    switch(boardAreaClick)  {
-    case LEFT_TOP:
-        leftTopX = x;
-        leftTopY = y;
-        break;
-    case RIGHT_TOP:
-        rightTopX = x;
-        rightTopY = y;
-        break;
-    case RIGHT_BOTTOM:
-        rightBottomX = x;
-        rightBottomY = y;
-        break;
-    case LEFT_BOTTOM:
-        leftBottomX = x;
-        leftBottomY = y;
-
-        // Left Top Point와 Right Top Point의 기울기
-        gradientA = (double)(rightTopY-leftTopY)
-                   / (double)(rightTopX-leftTopX);
-        // Right Top Point와 Right Bottom Point의 기울기
-        gradientB = (double)(rightBottomY-rightTopY)
-                   / (double)(rightBottomX-rightTopX);
-        // Right Bottom Point와 Left Bottom Point의 기울기
-        gradientC = (double)(leftBottomY-rightBottomY)
-                   / (double)(leftBottomX-rightBottomX);
-        // Left Bottom Point와 Left Top Point의 기울기
-        gradientD = (double)(leftBottomY-leftTopY)
-                   / (double)(leftBottomX-leftTopX);
-
-        emit signalRectangleReady(true);
-        emit signalBoardArea(false);
-
-        break;
-    case RESET_BOARD_AREA:   // 경기장 영역 클릭
-        leftTopX = leftTopY = leftBottomX = leftBottomY = 0;
-        rightTopX = rightTopY = rightBottomX = rightBottomY = 0;
-        isBoardAreaReady = false;
-        break;
-    }
 }
 
 /**
@@ -758,4 +706,13 @@ void ImageProcessing::slotSetRectangleBoardArea()
     rightBottomPoint = QPoint(0, 0);
 
     isRectangleBoardMode = true;
+}
+
+/**
+ * @brief ImageProcessing::slotRobotDirectionChanged
+ * @param robotDirection
+ */
+void ImageProcessing::slotRobotDirectionChanged(int robotDirection)
+{
+    this->robotDirection = (RobotDirection)robotDirection;
 }

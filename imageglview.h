@@ -25,47 +25,7 @@ private:
     int painterWidth;
     int painterHeight;
 
-    int mousePosX;
-    int mousePosY;
-    int boardAreaClick;
-
-    bool isMouseClicked;
-    bool isBoardArea;
-    bool isRectangleReady;
-    bool isRectangleBoardArea;
-    bool isRectangleBoardClick;
-
-    int redMax;
-    int redMin;
-    int greenMax;
-    int greenMin;
-    int blueMax;
-    int blueMin;
-
-    int leftTopX;
-    int leftTopY;
-    int leftBottomX;
-    int leftBottomY;
-    int rightTopX;
-    int rightTopY;
-    int rightBottomX;
-    int rightBottomY;
-
-    int erodeNum;
-    int dilateNum;
-
     QImage frameImage;
-
-    QPoint ballPos;
-    bool ballFound;
-    double ballGradient;
-
-    bool isBallMoving;
-    BallDirection ballDirection;
-    RobotDirection robotDirection;
-
-    int dir[8][2] = { {-1,-1}, {0, -1}, {1, -1}, {1, 0},
-                      {1, 1},  {0, 1}, {-1, 1}, {-1, 0}};
 
     virtual void paintEvent(QPaintEvent *event);
     virtual void mouseMoveEvent(QMouseEvent *event);
@@ -76,15 +36,6 @@ signals:
     void signalMouseLeftClick(QPoint);
     void signalMouseMove(QPoint);
     void signalMouseRelease(QPoint);
-
-    void signalDraggedImage(int, int);
-    void signalBoardAreaPoint(int, int, int);
-    void signalBoardAreaReady(bool);
-
-public slots:
-    void slotRectangleReady(bool);
-    void slotBoardArea(bool);
-    void slotRobotDirectionChanged(int);
 };
 
 #endif // IMAGEGLVIEW_H

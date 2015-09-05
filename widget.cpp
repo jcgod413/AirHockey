@@ -34,7 +34,7 @@ void Widget::initWidget()
 {
     imageGLView = new ImageGLView();
 
-    imageGLView->setMinimumSize(640, 480);
+    imageGLView->setMinimumSize(SCREEN_WIDTH, SCREEN_HEIGHT);
     ui->screenLayout->addWidget(imageGLView);
 
     ui->stopButton->setEnabled(false);
@@ -51,26 +51,12 @@ void Widget::initWidget()
     connect(ui->captureButton, SIGNAL(clicked()),
                                SLOT(slotCameraCapture()));
     connect(ui->robotDirectionSlider, SIGNAL(valueChanged(int)),
-            imageGLView, SLOT(slotRobotDirectionChanged(int)));
+            imageProcessing, SLOT(slotRobotDirectionChanged(int)));
 
     connect(ui->resetColorButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotResetMaskColor()));
     connect(ui->morpologyEnableCheck, SIGNAL(toggled(bool)),
             imageProcessing, SLOT(slotMorpologyEnable(bool)));
-
-    connect(imageGLView, SIGNAL(signalDraggedImage(int,int)),
-            imageProcessing, SLOT(slotDraggedImage(int,int)));
-    connect(imageGLView, SIGNAL(signalBoardAreaPoint(int,int,int)),
-            imageProcessing, SLOT(slotBoardAreaPoint(int,int,int)));
-    connect(imageGLView, SIGNAL(signalBoardAreaReady(bool)),
-            imageProcessing, SLOT(slotBoardAreaReady(bool)));
-
-    connect(imageProcessing, SIGNAL(signalBoardArea(bool)),
-            imageGLView, SLOT(slotBoardArea(bool)));
-    connect(imageProcessing, SIGNAL(signalRectangleReady(bool)),
-            imageGLView, SLOT(slotRectangleReady(bool)));
-    connect(imageProcessing, SIGNAL(signalBoardArea(bool)),
-            imageGLView, SLOT(slotBoardArea(bool)));
 
     connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
             this, SLOT(slotFindBall(QPoint)));
