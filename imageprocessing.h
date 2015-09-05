@@ -26,11 +26,18 @@ public:
     void erode(QImage*);
     void dilate(QImage*);
     void predictCourse(QImage*);
+    void drawFence();
 
 private:
     Ball *ball;
     QPoint ballPos;
+    QPoint mousePos;
     QImage rawImage;
+    QImage resultImage;
+    bool isRectangleBoardMode;
+    bool isRectangleGrabbing;
+    bool isRectangleReady;
+    bool isMouseClick;
 
     int toleranceBand;  // Mask Color 오차 범위
 
@@ -53,6 +60,9 @@ private:
     int greenMin;
     int blueMax;
     int blueMin;
+
+    QPoint leftTopPoint;
+    QPoint rightBottomPoint;
 
     int leftTopX;
     int leftTopY;
@@ -77,6 +87,7 @@ private:
 signals:
     void signalRectangleReady(bool);
     void signalBoardArea(bool);
+    void signalFindBall(QPoint);
 
 public slots:
     void slotDraggedImage(int, int);
@@ -84,6 +95,12 @@ public slots:
     void slotBoardAreaPoint(int, int, int);
     void slotMorpologyEnable(bool);
     void slotBoardAreaReady(bool);
+
+    void slotScreenClick(QPoint);
+    void slotScreenMove(QPoint);
+    void slotScreenRelease(QPoint);
+
+    void slotSetRectangleBoardArea();
 };
 
 #endif // IMAGEPROCESSING_H

@@ -62,7 +62,6 @@ void ImageGLView::paintEvent(QPaintEvent *event)
     if( frameImage.isNull() )   return;
 
     QPainter painter;
-    QRect rectDrawArea(startX, startY, endX-startX, endY-startY);
 
     painter.begin(this);
     painter.setRenderHint(QPainter::Antialiasing);
@@ -85,10 +84,11 @@ void ImageGLView::paintEvent(QPaintEvent *event)
         endY   = painterHeight;
     }
 
+    QRect rectDrawArea(startX, startY, endX-startX, endY-startY);
     painter.drawImage(rectDrawArea, frameImage);
 
     if( isBoardArea || !isRectangleReady )    {
-        painter.drawEllipse(QPoint(mousePosX, mousePosY), 5, 5);
+        painter.drawEllipse(QPoint(mousePosX, mousePosY), 3, 3);
     }
 
     if( isRectangleReady || (isRectangleBoardArea && isRectangleBoardClick) )  {
@@ -133,42 +133,9 @@ void ImageGLView::paintEvent(QPaintEvent *event)
  */
 void ImageGLView::mousePressEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event)
+    this->hasFocus();
 
-    int x = event->x();
-    int y = event->y();
-
-    isMouseClicked = true;
-
-    if( isRectangleBoardArea )  {
-        isRectangleBoardClick = true;
-
-        leftTopX = x;
-        leftTopY = y;
-    }
-
-    if( isBoardArea )   {
-        switch(boardAreaClick)  {
-        case LEFT_TOP:
-            leftTopX = x;
-            leftTopY = y;
-            break;
-        case RIGHT_TOP:
-            rightTopX = x;
-            rightTopY = y;
-            break;
-        case RIGHT_BOTTOM:
-            rightBottomX = x;
-            rightBottomY = y;
-        case LEFT_BOTTOM:
-            leftBottomX = x;
-            leftBottomY = y;
-            emit signalBoardAreaReady(false);
-            break;
-        }
-
-        emit signalBoardAreaPoint(boardAreaClick++, x, y);
-    }
+    emit signalMouseLeftClick(QPoint(event->x(), event->y()));
 }
 
 /**
@@ -177,25 +144,7 @@ void ImageGLView::mousePressEvent(QMouseEvent *event)
  */
 void ImageGLView::mouseReleaseEvent(QMouseEvent *event)
 {
-    Q_UNUSED(event)
-
-    isMouseClicked = false;
-
-    if( isRectangleBoardArea )  {
-        isRectangleReady = true;
-        isRectangleBoardArea = false;
-        isRectangleBoardClick = false;
-
-        rightBottomX = event->x();
-        rightBottomY = event->y();
-
-        emit signalBoardAreaPoint(LEFT_TOP, leftTopX, leftTopY);
-        emit signalBoardAreaPoint(RIGHT_TOP, rightTopX, rightTopY);
-        emit signalBoardAreaPoint(RIGHT_BOTTOM, rightBottomX, rightBottomY);
-        emit signalBoardAreaPoint(LEFT_BOTTOM, leftBottomX, leftBottomY);
-
-        emit signalBoardAreaReady(true);
-    }
+    emit signalMouseRelease(QPoint(event->x(), event->y()));
 }
 
 /**
@@ -204,63 +153,9 @@ void ImageGLView::mouseReleaseEvent(QMouseEvent *event)
  */
 void ImageGLView::mouseMoveEvent(QMouseEvent *event)
 {
-    mousePosX = event->x();
-    mousePosY = event->y();
-
-    if( mousePosX < 0 || mousePosY < 0
-        || mousePosX > SCREEN_WIDTH
-        || mousePosY > SCREEN_HEIGHT )
-        return;
-
-    if( isRectangleBoardClick ) {
-        rightTopX = mousePosX;
-        rightTopY = leftTopY;
-
-        leftBottomX = leftTopX;
-        leftBottomY = mousePosY;
-
-        rightBottomX = mousePosX;
-        rightBottomY = mousePosY;
-    }
-    else if( isMouseClicked )    {
-        emit signalDraggedImage(mousePosX, mousePosY);
-    }
+    emit signalMouseMove(QPoint(event->x(), event->y()));
 }
 
-/**
- * @brief ImageGLView::slotSetBoardArea
- */
-void ImageGLView::slotSetBoardArea()
-{
-    isBoardArea = true;
-    isRectangleReady = false;
-    isRectangleBoardArea = false;
-
-    this->hasFocus();
-
-    boardAreaClick = LEFT_TOP;
-
-    emit signalBoardAreaReady(false);
-    emit signalBoardAreaPoint(RESET_BOARD_AREA, 0, 0);
-}
-
-/**
- * @brief ImageGLView::slotSetRectangleBoardArea
- */
-void ImageGLView::slotSetRectangleBoardArea()
-{
-    leftTopX = leftTopY = 0;
-    rightTopX = rightTopY = 0;
-    leftBottomX = leftBottomY = 0;
-    rightBottomY = rightBottomY = 0;
-
-    isRectangleReady = false;
-    isRectangleBoardArea = true;
-
-    this->hasFocus();
-
-    emit signalBoardAreaReady(false);
-}
 
 /**
  * @brief ImageGLView::slotBoardArea

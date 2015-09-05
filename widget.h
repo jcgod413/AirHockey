@@ -50,6 +50,7 @@ public slots:
     void slotCaptureLoad();
     void slotUpdateCameraState(QCamera::State state);
     void slotThreadStart();
+    void slotFindBall(QPoint);
 };
 
 #endif // WIDGET_H

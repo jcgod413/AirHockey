@@ -55,10 +55,6 @@ void Widget::initWidget()
 
     connect(ui->resetColorButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotResetMaskColor()));
-    connect(ui->setBoardAreaButton, SIGNAL(clicked()),
-            imageGLView, SLOT(slotSetBoardArea()));
-    connect(ui->setBoardRectangleButton, SIGNAL(clicked()),
-            imageGLView, SLOT(slotSetRectangleBoardArea()));
     connect(ui->morpologyEnableCheck, SIGNAL(toggled(bool)),
             imageProcessing, SLOT(slotMorpologyEnable(bool)));
 
@@ -76,8 +72,18 @@ void Widget::initWidget()
     connect(imageProcessing, SIGNAL(signalBoardArea(bool)),
             imageGLView, SLOT(slotBoardArea(bool)));
 
-//    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
-//            this, SLOT(slotFindBall(QPoint)));
+    connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
+            this, SLOT(slotFindBall(QPoint)));
+
+    connect(imageGLView, SIGNAL(signalMouseLeftClick(QPoint)),
+            imageProcessing, SLOT(slotScreenClick(QPoint)));
+    connect(imageGLView, SIGNAL(signalMouseMove(QPoint)),
+            imageProcessing, SLOT(slotScreenMove(QPoint)));
+    connect(imageGLView, SIGNAL(signalMouseRelease(QPoint)),
+            imageProcessing, SLOT(slotScreenRelease(QPoint)));
+
+    connect(ui->setBoardRectangleButton, SIGNAL(clicked()),
+            imageProcessing, SLOT(slotSetRectangleBoardArea()));
 }
 
 /**
@@ -231,20 +237,20 @@ void Widget::slotCaptureLoad()
  * @brief Widget::slotFindBall
  * @param ballPosition
  */
-//void Widget::slotFindBall(QPoint ballPosition)
-//{
-//    QString ballPosText;
+void Widget::slotFindBall(QPoint ballPosition)
+{
+    QString ballPosText;
 
-//    if( ballPosition.x() == 0 && ballPosition.y() == 0 )  {
-//        ballPosText = "Not found";
-//    }
-//    else    {
-//        ballPosText.append("x : ");
-//        ballPosText.append(ballPosText.number(ballPosition.x()));
-//        ballPosText.append("\t");
-//        ballPosText.append("y : ");
-//        ballPosText.append(ballPosText.number(ballPosition.y()));
-//    }
+    if( ballPosition.x() == 0 && ballPosition.y() == 0 )  {
+        ballPosText = "Not found";
+    }
+    else    {
+        ballPosText.append("x : ");
+        ballPosText.append(ballPosText.number(ballPosition.x()));
+        ballPosText.append("\t");
+        ballPosText.append("y : ");
+        ballPosText.append(ballPosText.number(ballPosition.y()));
+    }
 
-//    ui->ballPosLabel->setText(ballPosText);
-//}
+    ui->ballPosLabel->setText(ballPosText);
+}

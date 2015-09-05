@@ -73,13 +73,15 @@ private:
     virtual void mouseReleaseEvent(QMouseEvent *event);
 
 signals:
+    void signalMouseLeftClick(QPoint);
+    void signalMouseMove(QPoint);
+    void signalMouseRelease(QPoint);
+
     void signalDraggedImage(int, int);
     void signalBoardAreaPoint(int, int, int);
     void signalBoardAreaReady(bool);
 
 public slots:
-    void slotSetBoardArea();
-    void slotSetRectangleBoardArea();
     void slotRectangleReady(bool);
     void slotBoardArea(bool);
     void slotRobotDirectionChanged(int);
