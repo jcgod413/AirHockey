@@ -6,6 +6,8 @@
 
 #define RETURN_ERROR -1
 
+#define DEFENCE_DISTANCE 50
+
 enum BoardPosition  {
     LEFT_TOP,
     RIGHT_TOP,
@@ -23,7 +25,7 @@ enum BallDirection  {
     NORTH_WEST
 };
 
-enum RobotDirection {
+enum RobotSide {
     LEFT_SIDE,
     RIGHT_SIDE
 };

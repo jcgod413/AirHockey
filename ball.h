@@ -20,10 +20,14 @@ public:
     double gradient;
     double distance;
     BallDirection direction;
+    QColor maxColor;
+    QColor minColor;
+    QPoint predictPoint;
 
 private:
     QQueue<QPoint> ballQueue;
     QPoint ballPosition;
+
 };
 
 #endif // BALL_H

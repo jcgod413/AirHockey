@@ -9,6 +9,7 @@ Widget::Widget(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::Widget),
     imageProcessing(new ImageProcessing),
+    tactics(new Tactics),
     camera(0),
     imageCapture(0)
 {
@@ -50,8 +51,8 @@ void Widget::initWidget()
                             SLOT(slotCameraStop()));
     connect(ui->captureButton, SIGNAL(clicked()),
                                SLOT(slotCameraCapture()));
-    connect(ui->robotDirectionSlider, SIGNAL(valueChanged(int)),
-            imageProcessing, SLOT(slotRobotDirectionChanged(int)));
+    connect(ui->robotSideSlider, SIGNAL(valueChanged(int)),
+            imageProcessing, SLOT(slotRobotSideChanged(int)));
 
     connect(ui->resetColorButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotResetMaskColor()));
@@ -70,6 +71,10 @@ void Widget::initWidget()
 
     connect(ui->setBoardRectangleButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotSetRectangleBoardArea()));
+
+    connect(imageProcessing, SIGNAL(signalRenewObjects(Ball*,Robot*)),
+            tactics, SLOT(slotRenewObjects(Ball*,Robot*)));
+
 }
 
 /**

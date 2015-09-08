@@ -3,6 +3,7 @@
 ImageProcessing::ImageProcessing(QObject *parent) :
     QObject(parent),
     ball(new Ball),
+    robot(new Robot),
     ballColor(new QColor(0, 0, 255)),
     ballPos(0, 0),
     mousePos(0, 0),
@@ -80,6 +81,7 @@ QImage ImageProcessing::imageProcess(QImage *rawImage)
     predictCourse(&resultImage);
 
     // tracking
+    emit signalRenewObjects(ball, robot);
     ballTracking();
 
     // draw fence
@@ -108,13 +110,14 @@ void ImageProcessing::drawFence()
 void ImageProcessing::ballTracking()
 {
     // To Do
-
+/*
     if( robotDirection == LEFT_SIDE )   {
         // 예상 도달 지점 잡기
     }
     else if( robotDirection == RIGHT_SIDE ) {
 
     }
+    */
 }
 
 /**
@@ -142,9 +145,9 @@ void ImageProcessing::getThresholdImage(QImage *dstImage)
                 unsigned char &green = imageData[loc+1];
                 unsigned char &red = imageData[loc+2];
 
-                if( (red <= redMax+toleranceBand && red >= redMin-toleranceBand) &&
-                    (green <= greenMax+toleranceBand && green >= greenMin-toleranceBand) &&
-                    (blue <= blueMax+toleranceBand && blue >= blueMin-toleranceBand) )
+                if( (red <= ball->maxColor.red()+toleranceBand && red >= ball->minColor.red()-toleranceBand) &&
+                    (green <= ball->maxColor.green()+toleranceBand && green >= ball->minColor.green()-toleranceBand) &&
+                    (blue <= ball->maxColor.blue()+toleranceBand && blue >= ball->minColor.blue()-toleranceBand) )
                 {
                     red = ballColor->red();
                     green = ballColor->green();
@@ -290,6 +293,9 @@ void ImageProcessing::slotDraggedImage(int x, int y)
     greenMin = (greenMin>green) ? green : greenMin;
     blueMax  = (blueMax<blue) ? blue : blueMax;
     blueMin  = (blueMin>blue) ? blue : blueMin;
+
+    ball->maxColor = QColor(redMax, greenMax, blueMax);
+    ball->minColor = QColor(redMin, greenMin, blueMin);
 }
 
 /**
@@ -299,6 +305,9 @@ void ImageProcessing::slotResetMaskColor()
 {
     redMax = greenMax = blueMax = 0;
     redMin = greenMin = blueMin = 255;
+
+    ball->maxColor = QColor(redMax, greenMax, blueMax);
+    ball->minColor = QColor(redMin, greenMin, blueMin);
 }
 
 /**
@@ -581,8 +590,7 @@ void ImageProcessing::dilate(QImage *sourceImage)
 
 void ImageProcessing::predictCourse(QImage *dstImage)
 {
-    QPixmap pix = QPixmap::fromImage(*dstImage);
-    QPainter painter(&pix);
+    QPainter painter(dstImage);
 
     painter.setPen(QColor(Qt::red));
     painter.drawEllipse(ballPos, 5, 5);
@@ -605,6 +613,7 @@ void ImageProcessing::predictCourse(QImage *dstImage)
                 aimPoint.setX((double)(leftTopPoint.y()-y_intercept) / a);
 
                 if( aimPoint.x() > rightBottomPoint.x() )  {
+
                     aimPoint.setX(rightBottomPoint.x());
                     aimPoint.setY(a * aimPoint.x() + y_intercept);
                     painter.drawLine(QPoint(x, y), aimPoint);
@@ -631,6 +640,9 @@ void ImageProcessing::predictCourse(QImage *dstImage)
                 }
             }
             else if( ball->direction == SOUTH_EAST || ball->direction == SOUTH_WEST )   {
+                if( robotSide == RIGHT_SIDE )   {
+
+                }
                 aimPoint.setX((double)(rightBottomPoint.y()-y_intercept) / a);
 
                 if( aimPoint.x() > rightBottomPoint.x() )  {
@@ -659,10 +671,19 @@ void ImageProcessing::predictCourse(QImage *dstImage)
                         ball->direction = NORTH_WEST;
                 }
             }
+
+            if( ball->direction == NORTH_EAST || ball->direction == SOUTH_EAST )    {
+                int predictX = rightBottomPoint.x() - DEFENCE_DISTANCE;
+                int predictY = (a*predictX) + y_intercept;
+                ball->predictPoint = QPoint(predictX, predictY);
+            }
+            else    {
+                int predictX = rightBottomPoint.x() + DEFENCE_DISTANCE;
+                int predictY = (a*predictX) + y_intercept;
+                ball->predictPoint = QPoint(predictX, predictY);
+            }
         }
     }
-
-    *dstImage = pix.toImage();
 }
 
 /**
@@ -726,10 +747,10 @@ void ImageProcessing::slotSetRectangleBoardArea()
 }
 
 /**
- * @brief ImageProcessing::slotRobotDirectionChanged
- * @param robotDirection
+ * @brief ImageProcessing::slotRobotSideChanged
+ * @param robotSide
  */
-void ImageProcessing::slotRobotDirectionChanged(int robotDirection)
+void ImageProcessing::slotRobotSideChanged(int robotSide)
 {
-    this->robotDirection = (RobotDirection)robotDirection;
+    this->robotSide = (RobotSide)robotSide;
 }

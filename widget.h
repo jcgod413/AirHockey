@@ -10,6 +10,8 @@
 #include "imageprocessing.h"
 #include "capturethread.h"
 #include "ball.h"
+#include "robot.h"
+#include "tactics.h"
 
 namespace Ui {
 class Widget;
@@ -38,7 +40,7 @@ private:
     ImageGLView *imageGLView;
     ImageProcessing *imageProcessing;
     CaptureThread *captureThread;
-
+    Tactics *tactics;
 
 public slots:
     void slotCameraStart();

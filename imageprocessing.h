@@ -11,6 +11,7 @@
 #include <QPainter>
 #include "ahr.h"
 #include "ball.h"
+#include "robot.h"
 
 class ImageProcessing : public QObject
 {
@@ -28,14 +29,17 @@ public:
     void predictCourse(QImage*);
     void drawFence();
     void ballTracking();
+    QPoint predictPoint;
 
 private:
     Ball *ball;
+    Robot *robot;
     QPoint ballPos;
     QPoint mousePos;
     QImage rawImage;
     QImage resultImage;
-    RobotDirection robotDirection;
+    RobotSide robotSide;
+
     bool isRectangleBoardMode;
     bool isRectangleGrabbing;
     bool isRectangleReady;
@@ -90,6 +94,8 @@ signals:
     void signalRectangleReady(bool);
     void signalBoardArea(bool);
     void signalFindBall(QPoint);
+    void signalRenewBallColor(QColor, QColor);
+    void signalRenewObjects(Ball*, Robot*);
 
 public slots:
     void slotDraggedImage(int, int);
@@ -102,7 +108,7 @@ public slots:
     void slotScreenRelease(QPoint);
 
     void slotSetRectangleBoardArea();
-    void slotRobotDirectionChanged(int);
+    void slotRobotSideChanged(int);
 };
 
 #endif // IMAGEPROCESSING_H

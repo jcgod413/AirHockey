@@ -6,6 +6,7 @@
 Ball::Ball() :
     isMoving(false),
     ballPosition(0, 0),
+    predictPoint(0, 0),
     gradient(0.0),
     distance(0)
 {

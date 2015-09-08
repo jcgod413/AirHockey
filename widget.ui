@@ -140,7 +140,7 @@
       </widget>
      </item>
      <item>
-      <widget class="QSlider" name="robotDirectionSlider">
+      <widget class="QSlider" name="robotSideSlider">
        <property name="maximum">
         <number>1</number>
        </property>

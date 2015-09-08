@@ -22,7 +22,9 @@ SOURCES += main.cpp\
     capturethread.cpp \
     imageprocessing.cpp \
     ball.cpp \
-    bluetoothmaster.cpp
+    bluetoothmaster.cpp \
+    robot.cpp \
+    tactics.cpp
 
 HEADERS  += widget.h \
     imageglview.h \
@@ -30,6 +32,8 @@ HEADERS  += widget.h \
     ahr.h \
     imageprocessing.h \
     ball.h \
-    bluetoothmaster.h
+    bluetoothmaster.h \
+    robot.h \
+    tactics.h
 
 FORMS    += widget.ui
