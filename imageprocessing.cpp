@@ -32,7 +32,7 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     erodeNum(2),
     dilateNum(1)
 {
-//    initImageProcessing();
+    initImageProcessing();
 }
 
 /**
@@ -48,7 +48,7 @@ ImageProcessing::~ImageProcessing()
  */
 void ImageProcessing::initImageProcessing()
 {
-
+    emit signalRenewObjects(ball, robot);
 }
 
 /**
@@ -81,8 +81,8 @@ QImage ImageProcessing::imageProcess(QImage *rawImage)
     predictCourse(&resultImage);
 
     // tracking
-    emit signalRenewObjects(ball, robot);
     ballTracking();
+    emit signalImageProcessCompleted();
 
     // draw fence
     drawFence();

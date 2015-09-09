@@ -96,6 +96,7 @@ signals:
     void signalFindBall(QPoint);
     void signalRenewBallColor(QColor, QColor);
     void signalRenewObjects(Ball*, Robot*);
+    void signalImageProcessCompleted();
 
 public slots:
     void slotDraggedImage(int, int);

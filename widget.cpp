@@ -78,6 +78,8 @@ void Widget::initWidget()
 
     connect(imageProcessing, SIGNAL(signalRenewObjects(Ball*,Robot*)),
             tactics, SLOT(slotRenewObjects(Ball*,Robot*)));
+    connect(imageProcessing, SIGNAL(signalImageProcessCompleted()),
+            tactics, SLOT(slotStartAction()));
 }
 
 /**

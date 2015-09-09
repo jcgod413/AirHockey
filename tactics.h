@@ -29,6 +29,7 @@ private:
 public slots:
     void slotRenewObjects(Ball*, Robot*);
     void slotPortNameChanged(QString);
+    void slotStartAction();
 };
 
 #endif // TACTICS_H

@@ -4,7 +4,9 @@
  * @brief Tactics::Tactics
  */
 Tactics::Tactics() :
-    bluetooth(new BluetoothMaster)
+    bluetooth(new BluetoothMaster),
+    ball(new Ball),
+    robot(new Robot)
 {
 
 }
@@ -37,12 +39,28 @@ void Tactics::offense()
 }
 
 /**
+ * @brief Tactics::slotStartAction
+ */
+void Tactics::slotStartAction()
+{
+    /* ball not found */
+    if( ball->pos().x() == 0 && ball->pos().y() == 0)   {
+        return;
+    }
+
+    defense();
+}
+
+/**
  * @brief Tactics::slotRenewObjects
  * @param ball
  * @param robot
  */
 void Tactics::slotRenewObjects(Ball *ball, Robot *robot)
 {
+    delete this->ball;
+    delete this->robot;
+
     this->ball = ball;
     this->robot = robot;
 }
