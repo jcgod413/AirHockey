@@ -2,6 +2,7 @@
 #define TACTICS_H
 
 #include <QWidget>
+#include "ahr.h"
 #include "robot.h"
 #include "ball.h"
 #include "bluetoothmaster.h"
@@ -23,8 +24,11 @@ private:
     Robot *robot;
     BluetoothMaster *bluetooth;
 
+    QString portName;
+
 public slots:
     void slotRenewObjects(Ball*, Robot*);
+    void slotPortNameChanged(QString);
 };
 
 #endif // TACTICS_H

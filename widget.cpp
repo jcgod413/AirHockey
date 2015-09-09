@@ -17,6 +17,7 @@ Widget::Widget(QWidget *parent) :
 
     initWidget();
     initCamera();
+    initBluetoothPort();
     initThread();
 }
 
@@ -59,6 +60,9 @@ void Widget::initWidget()
     connect(ui->morpologyEnableCheck, SIGNAL(toggled(bool)),
             imageProcessing, SLOT(slotMorpologyEnable(bool)));
 
+    connect(ui->bluetoothComboBox, SIGNAL(currentIndexChanged(QString)),
+            tactics, SLOT(slotPortNameChanged(QString)));
+
     connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
             this, SLOT(slotFindBall(QPoint)));
 
@@ -74,7 +78,6 @@ void Widget::initWidget()
 
     connect(imageProcessing, SIGNAL(signalRenewObjects(Ball*,Robot*)),
             tactics, SLOT(slotRenewObjects(Ball*,Robot*)));
-
 }
 
 /**
@@ -93,6 +96,12 @@ void Widget::initCamera()
         camDevNameLists.append(deviceName);
         ui->comboBox->addItem(description);
     }
+}
+
+void Widget::initBluetoothPort()
+{
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts())
+        ui->bluetoothComboBox->addItem(info.portName());
 }
 
 /**

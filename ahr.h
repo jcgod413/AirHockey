@@ -7,6 +7,7 @@
 #define RETURN_ERROR -1
 
 #define DEFENCE_DISTANCE 50
+#define SERIAL_DELAYTIME 50
 
 enum BoardPosition  {
     LEFT_TOP,

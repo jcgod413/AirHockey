@@ -22,8 +22,8 @@ Tactics::~Tactics()
  */
 void Tactics::defense()
 {
-    bluetooth.transaction(ui->comboBox->currentText(),
-                          ui->spinBox->value(),
+    bluetooth->transaction(portName,
+                          SERIAL_DELAYTIME,
                           parsingPositionData(QPoint(ball->predictPoint.x(),
                                                      ball->predictPoint.y())));
 }
@@ -45,6 +45,15 @@ void Tactics::slotRenewObjects(Ball *ball, Robot *robot)
 {
     this->ball = ball;
     this->robot = robot;
+}
+
+/**
+ * @brief Tactics::slotPortNameChanged
+ * @param portName
+ */
+void Tactics::slotPortNameChanged(QString portName)
+{
+    this->portName = portName;
 }
 
 /**

@@ -6,6 +6,7 @@
 #include <QCameraViewfinder>
 #include <QCameraImageCapture>
 #include <QTimer>
+#include <QtSerialPort/QSerialPortInfo>
 #include "imageglview.h"
 #include "imageprocessing.h"
 #include "capturethread.h"
@@ -28,6 +29,7 @@ public:
     void initWidget();
     void initCamera();
     void initThread();
+    void initBluetoothPort();
 
 private:
     Ui::Widget *ui;
