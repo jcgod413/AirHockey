@@ -6,7 +6,9 @@
 Tactics::Tactics() :
     bluetooth(new BluetoothMaster),
     ball(new Ball),
-    robot(new Robot)
+    robot(new Robot),
+    isObjectsLoaded(false),
+    beforeY(0)
 {
 
 }
@@ -24,10 +26,28 @@ Tactics::~Tactics()
  */
 void Tactics::defense()
 {
-    bluetooth->transaction(portName,
-                          SERIAL_DELAYTIME,
-                          parsingPositionData(QPoint(ball->predictPoint.x(),
-                                                     ball->predictPoint.y())));
+    qDebug("%d %d", ball->getX(), ball->getY());
+
+    beforeY = ball->getY() - ball->startPoint.y();
+
+    if( abs(beforeY-ball->getY()) > 10 )    {
+        bluetooth->transaction(portName,
+                              SERIAL_DELAYTIME,
+                              parsingPositionData(QPoint(ball->getX() - ball->startPoint.x(),
+                                                         ball->getY() - ball->startPoint.y())));
+        beforeY = ball->getY();
+    }
+
+    /*
+    if( abs(ball->predictPoint.x() - ball->previousPredictPoint.x())
+         + abs(ball->predictPoint.y() - ball->previousPredictPoint.y()) > 10 )  {
+        bluetooth->transaction(portName,
+                              SERIAL_DELAYTIME,
+                              parsingPositionData(QPoint(ball->getX(),
+                                                         ball->getY())));
+        ball->previousPredictPoint = ball->predictPoint;
+    }
+    */
 }
 
 /**
@@ -44,9 +64,12 @@ void Tactics::offense()
 void Tactics::slotStartAction()
 {
     /* ball not found */
-    if( ball->pos().x() == 0 && ball->pos().y() == 0)   {
-        return;
-    }
+//    if( ball->found() == false
+//        || isObjectsLoaded == false ) {
+//        return;
+//    }
+
+//    qDebug("%d %d", ball->pos().x(), ball->pos().y());
 
     defense();
 }
@@ -58,11 +81,14 @@ void Tactics::slotStartAction()
  */
 void Tactics::slotRenewObjects(Ball *ball, Robot *robot)
 {
+    qDebug("slot");
     delete this->ball;
     delete this->robot;
 
     this->ball = ball;
     this->robot = robot;
+
+    isObjectsLoaded = true;
 }
 
 /**
@@ -80,22 +106,26 @@ void Tactics::slotPortNameChanged(QString portName)
  */
 QString Tactics::parsingPositionData(QPoint position)
 {
-    int x = position.x();
-    int y = position.y();
+    QByteArray request;
     QString stringX = NULL;
     QString stringY = NULL;
 
-    while( x > 10 ) {
-        stringX.append("0");
-        x/=10;
-    }
-    stringX.append(stringX.number(x));
+    int x = position.x() / robot->unitX;
+    int y = position.y() / robot->unitY;
 
-    while( y > 10 ) {
-        stringY.append("0");
-        y/=10;
-    }
-    stringY.append(stringY.number(y));
+    stringX.append( (x >= 100) ? stringX.number(x)
+                               : (x >= 10 ) ? "0" + stringX.number(x)
+                                            : "00" +stringX.number(x));
 
-    return 'G' + stringX + stringY + 'E';
+    stringY.append( (y >= 100) ? stringY.number(y)
+                               : (y >= 10 ) ? "0" + stringY.number(y)
+                                            : "00" +stringY.number(y));
+
+    request.append("G");
+    request.append(stringX);
+    request.append(stringY);
+    request.append("E");
+    qDebug("%s", request.data());
+
+    return request;
 }

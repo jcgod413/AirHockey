@@ -12,6 +12,8 @@ public:
     ~Robot();
     QColor maxColor;
     QColor minColor;
+    int unitX;
+    int unitY;
 
 private:
     QPoint position;

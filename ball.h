@@ -23,6 +23,12 @@ public:
     QColor maxColor;
     QColor minColor;
     QPoint predictPoint;
+    QPoint previousPredictPoint;
+    bool found();
+    int getX();
+    int getY();
+
+    QPoint startPoint;
 
 private:
     QQueue<QPoint> ballQueue;

@@ -25,6 +25,8 @@ private:
     BluetoothMaster *bluetooth;
 
     QString portName;
+    bool isObjectsLoaded;
+    int beforeY;
 
 public slots:
     void slotRenewObjects(Ball*, Robot*);

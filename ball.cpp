@@ -7,6 +7,7 @@ Ball::Ball() :
     isMoving(false),
     ballPosition(0, 0),
     predictPoint(0, 0),
+    previousPredictPoint(0, 0),
     gradient(0.0),
     distance(0)
 {
@@ -19,6 +20,24 @@ Ball::Ball() :
 Ball::~Ball()
 {
 
+}
+
+/**
+ * @brief Ball::getX
+ * @return
+ */
+int Ball::getX()
+{
+    return ballPosition.x();
+}
+
+/**
+ * @brief Ball::getY
+ * @return
+ */
+int Ball::getY()
+{
+    return ballPosition.y();
 }
 
 /**
@@ -75,4 +94,11 @@ void Ball::updateInfo()
     else    {
         isMoving = false;
     }
+}
+
+bool Ball::found()
+{
+    return (ballPosition.x()>0 && ballPosition.y()>0)
+            ? true
+            : false;
 }

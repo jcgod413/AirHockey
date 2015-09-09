@@ -5,6 +5,7 @@
 #include <QImage>
 #include <QPixmap>
 #include <QColor>
+#include <QTimer>
 #include <QElapsedTimer>
 #include <QPoint>
 #include <QColor>
@@ -110,6 +111,8 @@ public slots:
 
     void slotSetRectangleBoardArea();
     void slotRobotSideChanged(int);
+
+    void slotSendObjects();
 };
 
 #endif // IMAGEPROCESSING_H

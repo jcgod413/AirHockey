@@ -48,6 +48,16 @@ ImageProcessing::~ImageProcessing()
  */
 void ImageProcessing::initImageProcessing()
 {
+    qDebug("emit");
+    // 객체 생성시간의 차이때문에 delay를 주기위하여 singleShot을 사용
+    QTimer::singleShot(3000, this, SLOT(slotSendObjects()));
+}
+
+/**
+ * @brief ImageProcessing::slotSendObjects
+ */
+void ImageProcessing::slotSendObjects()
+{
     emit signalRenewObjects(ball, robot);
 }
 
@@ -82,7 +92,9 @@ QImage ImageProcessing::imageProcess(QImage *rawImage)
 
     // tracking
     ballTracking();
-    emit signalImageProcessCompleted();
+    if( ball->found() == true ) {
+        emit signalImageProcessCompleted();
+    }
 
     // draw fence
     drawFence();
@@ -695,7 +707,7 @@ void ImageProcessing::slotScreenClick(QPoint mousePoint)
     isMouseClick = true;
 
     if( isRectangleBoardMode == true )  {
-        leftTopPoint = mousePoint;
+        ball->startPoint = leftTopPoint = mousePoint;
 
         isRectangleGrabbing = true;
     }
@@ -732,6 +744,10 @@ void ImageProcessing::slotScreenRelease(QPoint mousePoint)
         isBoardAreaReady = true;
 
         rightBottomPoint = mousePoint;
+
+        int unit = 23;
+        robot->unitX = (rightBottomPoint.x()-leftTopPoint.x()) / unit;
+        robot->unitY = (rightBottomPoint.y()-leftTopPoint.y()) / unit;
     }
 }
 
