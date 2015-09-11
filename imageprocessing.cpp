@@ -4,8 +4,11 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     QObject(parent),
     ball(new Ball),
     robot(new Robot),
-    ballColor(new QColor(0, 0, 255)),
+    radioState(RADIO_BALL),
+    ballSignColor(0, 0, 255),
+    robotSignColor(255, 0, 0),
     ballPos(0, 0),
+    robotPos(0, 0),
     mousePos(0, 0),
     predictPoint(0, 0),
     isMouseClick(false),
@@ -14,12 +17,6 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     isRectangleReady(false),
     isRectangleBoardMode(false),
     isRectangleGrabbing(false),
-    redMax(0),
-    greenMax(0),
-    blueMax(0),
-    redMin(255),
-    greenMin(255),
-    blueMin(255),
     leftTopX(0),
     leftTopY(0),
     leftBottomX(0),
@@ -82,9 +79,10 @@ QImage ImageProcessing::imageProcess(QImage *rawImage)
             dilate(&resultImage);
     }
 
-    // get ball position
-    ball->find(ballPos = getBallPosition(&resultImage));
-    ball->updateInfo();
+    // get objects position
+    getObjectsPosition(&resultImage);
+    ball->updatePosition(ballPos);
+    robot->updatePosition(robotPos);
     emit signalFindBall(ballPos);
 
     // predict
@@ -130,6 +128,7 @@ void ImageProcessing::ballTracking()
 
     }
     */
+
 }
 
 /**
@@ -163,15 +162,23 @@ void ImageProcessing::getThresholdImage(QImage *dstImage)
                 unsigned char &green = imageData[loc+1];
                 unsigned char &red = imageData[loc+2];
 
-                if( (red <= ball->maxColor.red()+toleranceBand && red >= ball->minColor.red()-toleranceBand) &&
-                    (green <= ball->maxColor.green()+toleranceBand && green >= ball->minColor.green()-toleranceBand) &&
-                    (blue <= ball->maxColor.blue()+toleranceBand && blue >= ball->minColor.blue()-toleranceBand) )
+                if( (red <= ball->getMaxColor().red()+toleranceBand && red >= ball->getMinColor().red()-toleranceBand) &&
+                    (green <= ball->getMaxColor().green()+toleranceBand && green >= ball->getMinColor().green()-toleranceBand) &&
+                    (blue <= ball->getMaxColor().blue()+toleranceBand && blue >= ball->getMinColor().blue()-toleranceBand) )
                 {
-                    red = ballColor->red();
-                    green = ballColor->green();
-                    blue = ballColor->blue();
+                    red = ballSignColor.red();
+                    green = ballSignColor.green();
+                    blue = ballSignColor.blue();
                 }
 
+                if( (red <= robot->getMaxColor().red()+toleranceBand && red >= robot->getMinColor().red()-toleranceBand) &&
+                    (green <= robot->getMaxColor().green()+toleranceBand && green >= robot->getMinColor().green()-toleranceBand) &&
+                    (blue <= robot->getMaxColor().blue()+toleranceBand && blue >= robot->getMinColor().blue()-toleranceBand) )
+                {
+                    red = robotSignColor.red();
+                    green = robotSignColor.green();
+                    blue = robotSignColor.blue();
+                }
                 loc += 4;
             }
         }
@@ -307,15 +314,14 @@ void ImageProcessing::slotDraggedImage(int x, int y)
     int green = maskColor.green();
     int blue = maskColor.blue();
 
-    redMax   = (redMax<red) ? red : redMax;
-    redMin   = (redMin>red) ? red : redMin;
-    greenMax = (greenMax<green) ? green : greenMax;
-    greenMin = (greenMin>green) ? green : greenMin;
-    blueMax  = (blueMax<blue) ? blue : blueMax;
-    blueMin  = (blueMin>blue) ? blue : blueMin;
-
-    ball->maxColor = QColor(redMax, greenMax, blueMax);
-    ball->minColor = QColor(redMin, greenMin, blueMin);
+    switch(radioState)  {
+    case RADIO_BALL:
+        ball->updateColor(red, green, blue);
+        break;
+    case RADIO_ROBOT:
+        robot->updateColor(red, green, blue);
+        break;
+    }
 }
 
 /**
@@ -323,11 +329,23 @@ void ImageProcessing::slotDraggedImage(int x, int y)
  */
 void ImageProcessing::slotResetMaskColor()
 {
-    redMax = greenMax = blueMax = 0;
-    redMin = greenMin = blueMin = 255;
+    switch(radioState)  {
+    case RADIO_BALL:
+        ball->resetColor();
+        break;
+    case RADIO_ROBOT:
+        robot->resetColor();
+        break;
+    }
+}
 
-    ball->maxColor = QColor(redMax, greenMax, blueMax);
-    ball->minColor = QColor(redMin, greenMin, blueMin);
+/**
+ * @brief ImageProcessing::radioStateChanged
+ * @param radioState
+ */
+void ImageProcessing::radioStateChanged(RadioState radioState)
+{
+    this->radioState = radioState;
 }
 
 /**
@@ -349,96 +367,165 @@ void ImageProcessing::slotMorpologyEnable(bool check)
 }
 
 /**
- * @brief ImageProcessing::getBallPosition
+ * @brief ImageProcessing::getPosition
  * @param frameImage
  * @return
  */
-QPoint ImageProcessing::getBallPosition(QImage *frameImage)
+void ImageProcessing::getObjectsPosition(QImage *frameImage)
 {
     if( !isBoardAreaReady )
-        return QPoint(0, 0);    // Board area not ready
+        return;    // Board area not ready
 
     int x;
     int y;
-    int max = 0;
+    int maxBall = 0;
+    int maxRobot = 0;
     int maxIndex = 0;
-    int groupNum = 1;
+    int groupBallNum = 1;
+    int groupRobotNum = 1;
 
-    Outline maxOutline;
-    Outline *outline = new Outline[groupNum];
-    int *group = new int[groupNum];
+    Outline maxBallOutline;
+    Outline maxRobotOutline;
+    Outline *ballOutline = new Outline[groupBallNum];
+    Outline *robotOutline = new Outline[groupRobotNum];
+    int *groupBall = new int[groupBallNum];
+    int *groupRobot = new int[groupBallNum];
 
     imageData = frameImage->bits();
-    memset(label, 0, sizeof(label));
+    memset(labelBall, 0, sizeof(labelBall));
+    memset(labelRobot, 0, sizeof(labelRobot));
 
-    for(int i=leftTopPoint.y(); i<rightBottomPoint.y(); i++)    {
-        for(int j=leftTopPoint.x(); j<rightBottomPoint.x(); j++)    {
+    int startX = leftTopPoint.x();
+    int startY = leftTopPoint.y();
+    int endX = rightBottomPoint.x();
+    int endY = rightBottomPoint.y();
+
+    for(int i=startY; i<endY; i++)    {
+        for(int j=startX; j<endX; j++)    {
             int loc = i*2560 + j*4;
             QColor *color = new QColor(imageData[loc+2],
                                        imageData[loc+1],
                                        imageData[loc],
                                        255);
 
-            if( color->operator ==(*ballColor) && label[i][j] == 0 )
+            if( *color == ballSignColor && labelBall[i][j] == 0 )
             {
-                bool isGroupAdjacent = false;
+                bool isBallGroupAdjacent = false;
 
                 for(int k=0; k<4; k++)  {
                     x = j + dir[k][1];
                     y = i + dir[k][0];
 
-                    if( label[y][x] > 0 )   {
-                        isGroupAdjacent = true;
-                        label[i][j] = label[y][x];
+                    if( labelBall[y][x] > 0 )   {
+                        isBallGroupAdjacent = true;
+                        labelBall[i][j] = labelBall[y][x];
 
-                        if( max < ++group[label[i][j]-1] )    {
-                            max = group[label[i][j]-1];
-                            maxIndex = label[i][j]-1;
-                            maxOutline = outline[maxIndex];
+                        if( maxBall < ++groupBall[labelBall[i][j]-1] )    {
+                            maxBall = groupBall[labelBall[i][j]-1];
+                            maxIndex = labelBall[i][j]-1;
+                            maxBallOutline = ballOutline[maxIndex];
                         }
 
-                        if( x < outline[label[i][j]-1].leftUpSide.x() )
-                            outline[label[i][j]-1].leftUpSide.setX(j);
-                        if( y < outline[label[i][j]-1].leftUpSide.y() )
-                            outline[label[i][j]-1].leftUpSide.setY(i);
-                        if( x > outline[label[i][j]-1].rightDownSide.x() )
-                            outline[label[i][j]-1].rightDownSide.setX(j);
-                        if( y > outline[label[i][j]-1].rightDownSide.y() )
-                            outline[label[i][j]-1].rightDownSide.setY(i);
+                        if( x < ballOutline[labelBall[i][j]-1].leftUpSide.x() )
+                            ballOutline[labelBall[i][j]-1].leftUpSide.setX(j);
+                        if( y < ballOutline[labelBall[i][j]-1].leftUpSide.y() )
+                            ballOutline[labelBall[i][j]-1].leftUpSide.setY(i);
+                        if( x > ballOutline[labelBall[i][j]-1].rightDownSide.x() )
+                            ballOutline[labelBall[i][j]-1].rightDownSide.setX(j);
+                        if( y > ballOutline[labelBall[i][j]-1].rightDownSide.y() )
+                            ballOutline[labelBall[i][j]-1].rightDownSide.setY(i);
 
                         break;
                     }
                 }
-                if( isGroupAdjacent )
+                if( isBallGroupAdjacent )
                     continue;
                 else    {
-                    label[i][j] = ++groupNum;
+                    labelBall[i][j] = ++groupBallNum;
 
-                    int *tempGroup = new int[groupNum];
-                    Outline *tempOutline = new Outline[groupNum];
+                    int *tempGroup = new int[groupBallNum];
+                    Outline *tempOutline = new Outline[groupBallNum];
 
-                    memcpy(tempGroup, group, sizeof(int)*(groupNum-1));
-                    memcpy(tempOutline, outline, sizeof(Outline)*(groupNum-1));
-                    delete group;
-                    delete outline;
+                    memcpy(tempGroup, groupBall, sizeof(int)*(groupBallNum-1));
+                    memcpy(tempOutline, ballOutline, sizeof(Outline)*(groupBallNum-1));
+                    delete groupBall;
+                    delete ballOutline;
 
-                    group = tempGroup;
-                    outline = tempOutline;
+                    groupBall = tempGroup;
+                    ballOutline = tempOutline;
 
-                    group[groupNum-1] = 1;
-                    outline[groupNum-1].leftUpSide.setX(j);
-                    outline[groupNum-1].leftUpSide.setY(i);
-                    outline[groupNum-1].rightDownSide.setX(j);
-                    outline[groupNum-1].rightDownSide.setY(i);
+                    groupBall[groupBallNum-1] = 1;
+                    ballOutline[groupBallNum-1].leftUpSide.setX(j);
+                    ballOutline[groupBallNum-1].leftUpSide.setY(i);
+                    ballOutline[groupBallNum-1].rightDownSide.setX(j);
+                    ballOutline[groupBallNum-1].rightDownSide.setY(i);
                 }
             }
 
-            delete color;
+            if( *color == robotSignColor && labelRobot[i][j] == 0 )
+            {
+                bool isRobotGroupAdjacent = false;
+
+                for(int k=0; k<4; k++)  {
+                    x = j + dir[k][1];
+                    y = i + dir[k][0];
+
+                    if( labelRobot[y][x] > 0 )   {
+                        isRobotGroupAdjacent = true;
+                        labelRobot[i][j] = labelRobot[y][x];
+
+                        if( maxRobot < ++groupRobot[labelRobot[i][j]-1] )    {
+                            maxRobot = groupRobot[labelRobot[i][j]-1];
+                            maxIndex = labelRobot[i][j]-1;
+                            maxRobotOutline = robotOutline[maxIndex];
+                        }
+
+                        if( x < robotOutline[labelRobot[i][j]-1].leftUpSide.x() )
+                            robotOutline[labelRobot[i][j]-1].leftUpSide.setX(j);
+                        if( y < robotOutline[labelRobot[i][j]-1].leftUpSide.y() )
+                            robotOutline[labelRobot[i][j]-1].leftUpSide.setY(i);
+                        if( x > robotOutline[labelRobot[i][j]-1].rightDownSide.x() )
+                            robotOutline[labelRobot[i][j]-1].rightDownSide.setX(j);
+                        if( y > robotOutline[labelRobot[i][j]-1].rightDownSide.y() )
+                            robotOutline[labelRobot[i][j]-1].rightDownSide.setY(i);
+
+                        break;
+                    }
+                }
+                if( isRobotGroupAdjacent )
+                    continue;
+                else    {
+                    labelRobot[i][j] = ++groupRobotNum;
+
+                    int *tempGroup = new int[groupRobotNum];
+                    Outline *tempOutline = new Outline[groupRobotNum];
+
+                    memcpy(tempGroup, groupRobot, sizeof(int)*(groupRobotNum-1));
+                    memcpy(tempOutline, robotOutline, sizeof(Outline)*(groupRobotNum-1));
+                    delete groupRobot;
+                    delete robotOutline;
+
+                    groupRobot = tempGroup;
+                    robotOutline = tempOutline;
+
+                    groupRobot[groupRobotNum-1] = 1;
+                    robotOutline[groupRobotNum-1].leftUpSide.setX(j);
+                    robotOutline[groupRobotNum-1].leftUpSide.setY(i);
+                    robotOutline[groupRobotNum-1].rightDownSide.setX(j);
+                    robotOutline[groupRobotNum-1].rightDownSide.setY(i);
+                }
+            }
         }
     }
 
-    return QPoint((maxOutline.leftUpSide.x() + maxOutline.rightDownSide.x()) / 2,
-                  (maxOutline.leftUpSide.y() + maxOutline.rightDownSide.y()) / 2);
+    ballPos.setX((maxBallOutline.leftUpSide.x()
+                  + maxBallOutline.rightDownSide.x()) / 2);
+    ballPos.setY((maxBallOutline.leftUpSide.y()
+                  + maxBallOutline.rightDownSide.y()) / 2);
+    robotPos.setX((maxRobotOutline.leftUpSide.x()
+                   + maxRobotOutline.rightDownSide.x()) / 2);
+    robotPos.setY((maxRobotOutline.leftUpSide.y()
+                   + maxRobotOutline.rightDownSide.y()) / 2);
 }
 
 /**
@@ -481,9 +568,9 @@ void ImageProcessing::erode(QImage *sourceImage)
             unsigned char green = imageData[loc+1];
             unsigned char red = imageData[loc+2];
 
-            if( !(blue == ballColor->blue()
-                  && red == ballColor->red()
-                  && green == ballColor->green()) )
+            if( !(blue == ballSignColor.blue()
+                  && red == ballSignColor.red()
+                  && green == ballSignColor.green()) )
             {
                 for(int k=0; k<8; k++)  {
 
@@ -493,9 +580,9 @@ void ImageProcessing::erode(QImage *sourceImage)
                     unsigned char _green = imageData[_loc+1];
                     unsigned char _red = imageData[_loc+2];
 
-                    if( _blue == ballColor->blue()
-                        && _red == ballColor->red()
-                        && _green == ballColor->green() )
+                    if( _blue == ballSignColor.blue()
+                        && _red == ballSignColor.red()
+                        && _green == ballSignColor.green() )
                     {
                         check[_loc] = true;
                     }
@@ -565,9 +652,9 @@ void ImageProcessing::dilate(QImage *sourceImage)
             unsigned char green = imageData[loc+1];
             unsigned char red = imageData[loc+2];
 
-            if( blue == ballColor->blue()
-                && red == ballColor->red()
-                && green == ballColor->green() )
+            if( blue == ballSignColor.blue()
+                && red == ballSignColor.red()
+                && green == ballSignColor.green() )
             {
                 for(int k=0; k<8; k++)  {
                     int _loc = (i+dir[k][0])*2560 + (j+dir[k][1])*4;
@@ -576,9 +663,9 @@ void ImageProcessing::dilate(QImage *sourceImage)
                     unsigned char _green = imageData[_loc+1];
                     unsigned char _red = imageData[_loc+2];
 
-                    if( !(_blue == ballColor->blue()
-                          && _red == ballColor->red()
-                          && _green == ballColor->green()) ) {
+                    if( !(_blue == ballSignColor.blue()
+                          && _red == ballSignColor.red()
+                          && _green == ballSignColor.green()) ) {
                         check[_loc] = true;
                     }
                 }
@@ -612,6 +699,8 @@ void ImageProcessing::predictCourse(QImage *dstImage)
 {
     QPainter painter(dstImage);
 
+    painter.setPen(QColor(Qt::blue));
+    painter.drawEllipse(robotPos, 5, 5);
     painter.setPen(QColor(Qt::red));
     painter.drawEllipse(ballPos, 5, 5);
 
@@ -707,10 +796,10 @@ void ImageProcessing::predictCourse(QImage *dstImage)
 }
 
 /**
- * @brief ImageProcessing::slotScreenClick
+ * @brief ImageProcessing::slotMouseClick
  * @param mousePoint
  */
-void ImageProcessing::slotScreenClick(QPoint mousePoint)
+void ImageProcessing::slotMouseClick(QPoint mousePoint)
 {
     isMouseClick = true;
 
@@ -722,10 +811,10 @@ void ImageProcessing::slotScreenClick(QPoint mousePoint)
 }
 
 /**
- * @brief ImageProcessing::slotScreenMove
+ * @brief ImageProcessing::slotMouseMove
  * @param mousePoint
  */
-void ImageProcessing::slotScreenMove(QPoint mousePoint)
+void ImageProcessing::slotMouseMove(QPoint mousePoint)
 {
     mousePos = mousePoint;
 
@@ -740,9 +829,10 @@ void ImageProcessing::slotScreenMove(QPoint mousePoint)
 }
 
 /**
- * @brief ImageProcessing::slotScreenRelease
+ * @brief ImageProcessing::slotMouseRelease
+ * @param mousePoint
  */
-void ImageProcessing::slotScreenRelease(QPoint mousePoint)
+void ImageProcessing::slotMouseRelease(QPoint mousePoint)
 {
     isMouseClick = false;
 

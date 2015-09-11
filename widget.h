@@ -30,6 +30,7 @@ public:
     void initCamera();
     void initThread();
     void initBluetoothPort();
+    void initTestSerial();
 
 private:
     Ui::Widget *ui;
@@ -44,6 +45,8 @@ private:
     CaptureThread *captureThread;
     Tactics *tactics;
 
+    RadioState radioState;
+
 public slots:
     void slotCameraStart();
     void slotCameraStop();
@@ -55,6 +58,10 @@ public slots:
     void slotUpdateCameraState(QCamera::State state);
     void slotThreadStart();
     void slotFindBall(QPoint);
+    void slotSendSerial();
+
+    void slotRadioBall();
+    void slotRadioRobot();
 };
 
 #endif // WIDGET_H

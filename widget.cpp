@@ -11,7 +11,8 @@ Widget::Widget(QWidget *parent) :
     imageProcessing(new ImageProcessing),
     tactics(new Tactics),
     camera(0),
-    imageCapture(0)
+    imageCapture(0),
+    radioState(RADIO_BALL)
 {
     ui->setupUi(this);
 
@@ -19,6 +20,7 @@ Widget::Widget(QWidget *parent) :
     initCamera();
     initBluetoothPort();
     initThread();
+    initTestSerial();
 }
 
 /**
@@ -46,6 +48,8 @@ void Widget::initWidget()
     ui->setBoardRectangleButton->setEnabled(false);
     ui->morpologyEnableCheck->setEnabled(false);
 
+    ui->radioBallButton->click();
+
     connect(ui->startButton, SIGNAL(clicked()),
                              SLOT(slotCameraStart()));
     connect(ui->stopButton, SIGNAL(clicked()),
@@ -69,11 +73,11 @@ void Widget::initWidget()
             this, SLOT(slotFindBall(QPoint)));
 
     connect(imageGLView, SIGNAL(signalMouseLeftClick(QPoint)),
-            imageProcessing, SLOT(slotScreenClick(QPoint)));
+            imageProcessing, SLOT(slotMouseClick(QPoint)));
     connect(imageGLView, SIGNAL(signalMouseMove(QPoint)),
-            imageProcessing, SLOT(slotScreenMove(QPoint)));
+            imageProcessing, SLOT(slotMouseMove(QPoint)));
     connect(imageGLView, SIGNAL(signalMouseRelease(QPoint)),
-            imageProcessing, SLOT(slotScreenRelease(QPoint)));
+            imageProcessing, SLOT(slotMouseRelease(QPoint)));
 
     connect(ui->setBoardRectangleButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotSetRectangleBoardArea()));
@@ -82,6 +86,11 @@ void Widget::initWidget()
             tactics, SLOT(slotRenewObjects(Ball*,Robot*)));
     connect(imageProcessing, SIGNAL(signalImageProcessCompleted()),
             tactics, SLOT(slotStartAction()));
+
+    connect(ui->radioBallButton, SIGNAL(clicked()),
+            this, SLOT(slotRadioBall()));
+    connect(ui->radioRobotButton, SIGNAL(clicked()),
+            this, SLOT(slotRadioRobot()));
 }
 
 /**
@@ -117,6 +126,45 @@ void Widget::initThread()
 
     connect(captureThread, SIGNAL(captureReady()),
                            SLOT(slotCaptureLoad()));
+}
+
+/**
+ * @brief Widget::initTestMotion
+ */
+void Widget::initTestSerial()
+{
+    connect(ui->serialSendButton, SIGNAL(clicked()),
+            this, SLOT(slotSendSerial()));
+}
+
+/**
+ * @brief Widget::slotSendSerial
+ */
+void Widget::slotSendSerial()
+{
+    QByteArray packet;
+    packet.append("S")
+            .append("0")
+            .append(ui->serialEditText->text())
+            .append("E");
+
+    tactics->sendSerial(packet);
+}
+
+/**
+ * @brief Widget::slotRadioBall
+ */
+void Widget::slotRadioBall()
+{
+    imageProcessing->radioStateChanged(radioState = RADIO_BALL);
+}
+
+/**
+ * @brief Widget::slotRadioRobot
+ */
+void Widget::slotRadioRobot()
+{
+    imageProcessing->radioStateChanged(radioState = RADIO_ROBOT);
 }
 
 /**

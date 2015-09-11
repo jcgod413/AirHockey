@@ -22,7 +22,7 @@ public:
     ~ImageProcessing();
     void getThresholdImage(QImage*);
     void getBoundX(int y, int &startX, int &endX);
-    QPoint getBallPosition(QImage *frameImage);
+    void getObjectsPosition(QImage *frameImage);
     void initImageProcessing();
     QImage imageProcess(QImage*);
     void erode(QImage*);
@@ -31,15 +31,18 @@ public:
     void drawFence();
     void ballTracking();
     QPoint predictPoint;
+    void radioStateChanged(RadioState);
 
 private:
     Ball *ball;
     Robot *robot;
     QPoint ballPos;
+    QPoint robotPos;
     QPoint mousePos;
     QImage rawImage;
     QImage resultImage;
     RobotSide robotSide;
+    RadioState radioState;
 
     bool isRectangleBoardMode;
     bool isRectangleGrabbing;
@@ -48,7 +51,9 @@ private:
 
     int toleranceBand;  // Mask Color 오차 범위
 
-    int label[SCREEN_HEIGHT][SCREEN_WIDTH];
+    int labelBall[SCREEN_HEIGHT][SCREEN_WIDTH];
+    int labelRobot[SCREEN_HEIGHT][SCREEN_WIDTH];
+
     int dir[8][2] = { {0, -1}, {-1,-1}, {-1, 0}, {-1, 1}, 
                       {1, -1}, {1, 0}, {1, 1},  {0, 1} };
     struct Outline  {
@@ -89,7 +94,8 @@ private:
     double gradientC;   // Right Bottom Point와 Left Bottom Point의 기울기
     double gradientD;   // Right Bottom Point와 Left Bottom Point의 기울기
 
-    QColor *ballColor;
+    QColor ballSignColor;
+    QColor robotSignColor;
 
 signals:
     void signalRectangleReady(bool);
@@ -105,9 +111,9 @@ public slots:
     void slotMorpologyEnable(bool);
     void slotBoardAreaReady(bool);
 
-    void slotScreenClick(QPoint);
-    void slotScreenMove(QPoint);
-    void slotScreenRelease(QPoint);
+    void slotMouseClick(QPoint);
+    void slotMouseMove(QPoint);
+    void slotMouseRelease(QPoint);
 
     void slotSetRectangleBoardArea();
     void slotRobotSideChanged(int);

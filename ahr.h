@@ -32,5 +32,27 @@ enum RobotSide {
     RIGHT_SIDE
 };
 
+enum RadioState {
+    RADIO_BALL,
+    RADIO_ROBOT
+};
+
+enum Packet_Major   {
+    MOVE
+};
+
+enum Packet_Minor {
+    ERROR,
+    DIRECTION_SOUTH_WEST,
+    DIRECTION_SOUTH,
+    DIRECTION_SOUTH_EAST,
+    DIRECTION_EAST,
+    DIRECTION_HALT,
+    DIRECTION_WEST,
+    DIRECTION_NORTH_WEST,
+    DIRECTION_NORTH,
+    DIRECTION_NORTH_EAST
+};
+
 #endif // AHR
 

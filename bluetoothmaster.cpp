@@ -32,12 +32,14 @@ BluetoothMaster::~BluetoothMaster()
  */
 void BluetoothMaster::transaction(const QString &portName,
                                   int waitTimeout,
-                                  const QString &request)
+                                  const QByteArray &request)
 {
     QMutexLocker locker(&mutex);
     this->portName = portName;
     this->waitTimeout = waitTimeout;
     this->request = request;
+
+    qDebug("%s", request.data());
 
     if(!isRunning())
     {
@@ -63,7 +65,7 @@ void BluetoothMaster::run()
     }
 
     int currentWaitTimeout = waitTimeout;
-    QString currentRequest = request;
+    QByteArray currentRequest = request;
     mutex.unlock();
 
     QSerialPort serial;
@@ -81,7 +83,7 @@ void BluetoothMaster::run()
             }
         }
 
-        QByteArray requestData = currentRequest.toLocal8Bit();
+        QByteArray requestData = currentRequest;
         serial.write(requestData);
         if (serial.waitForBytesWritten(waitTimeout))    {
 

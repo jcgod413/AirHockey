@@ -5,11 +5,17 @@
  */
 Ball::Ball() :
     isMoving(false),
-    ballPosition(0, 0),
+    position(0, 0),
     predictPoint(0, 0),
     previousPredictPoint(0, 0),
     gradient(0.0),
-    distance(0)
+    distance(0),
+    redMax(0),
+    greenMax(0),
+    blueMax(0),
+    redMin(255),
+    greenMin(255),
+    blueMin(255)
 {
 
 }
@@ -22,33 +28,53 @@ Ball::~Ball()
 
 }
 
-/**
- * @brief Ball::getX
- * @return
- */
-int Ball::getX()
+QPoint Ball::getPosition()
 {
-    return ballPosition.x();
+    return position;
 }
 
 /**
- * @brief Ball::getY
- * @return
+ * @brief Ball::updateColor
+ * @param red
+ * @param green
+ * @param blue
  */
-int Ball::getY()
+void Ball::updateColor(int red, int green, int blue)
 {
-    return ballPosition.y();
+    redMax   = (redMax<red) ? red : redMax;
+    redMin   = (redMin>red) ? red : redMin;
+    greenMax = (greenMax<green) ? green : greenMax;
+    greenMin = (greenMin>green) ? green : greenMin;
+    blueMax  = (blueMax<blue) ? blue : blueMax;
+    blueMin  = (blueMin>blue) ? blue : blueMin;
+
+    maxColor = QColor(redMax, greenMax, blueMax);
+    minColor = QColor(redMin, greenMin, blueMin);
 }
 
 /**
- * @brief Ball::slotFindBall
- * @param _ballPosition
+ * @brief Ball::resetColor
  */
-void Ball::find(QPoint _ballPosition)
+void Ball::resetColor()
 {
-    ballPosition = _ballPosition;
+    redMax = greenMax = blueMax = 0;
+    redMin = greenMin = blueMin = 255;
 
-    ballQueue.enqueue(ballPosition);
+    maxColor = QColor(redMax, greenMax, blueMax);
+    minColor = QColor(redMin, greenMin, blueMin);
+}
+
+/**
+ * @brief Ball::updatePosition
+ * @param position
+ */
+void Ball::updatePosition(QPoint position)
+{
+    this->position = position;
+
+    ballQueue.enqueue(position);
+
+    updateInfo();
 }
 
 /**
@@ -66,19 +92,19 @@ void Ball::updateInfo()
     }
 
     // 정지해있는지 프레임간의 공의 거리 차이를 가지고 판단
-    distance = abs(ballPosition.x() - previousBallPosition.x())
-                + abs(ballPosition.y() - previousBallPosition.y());
+    distance = abs(position.x() - previousBallPosition.x())
+                + abs(position.y() - previousBallPosition.y());
 
-    if( ballPosition.x() > previousBallPosition.x()
-        && ballPosition.y() > previousBallPosition.y() )    {
+    if( position.x() > previousBallPosition.x()
+        && position.y() > previousBallPosition.y() )    {
         direction = SOUTH_EAST;
     }
-    else if( ballPosition.x() > previousBallPosition.x()
-             && ballPosition.y() < previousBallPosition.y() )    {
+    else if( position.x() > previousBallPosition.x()
+             && position.y() < previousBallPosition.y() )    {
         direction = NORTH_EAST;
     }
-    else if( ballPosition.x() < previousBallPosition.x()
-             && ballPosition.y() < previousBallPosition.y() )    {
+    else if( position.x() < previousBallPosition.x()
+             && position.y() < previousBallPosition.y() )    {
         direction = NORTH_WEST;
     }
     else    {
@@ -86,8 +112,8 @@ void Ball::updateInfo()
     }
 
     if( distance > 16 )    {
-        gradient = (double)(ballPosition.y() - previousBallPosition.y())
-                   / (double)(ballPosition.x() - previousBallPosition.x());
+        gradient = (double)(position.y() - previousBallPosition.y())
+                   / (double)(position.x() - previousBallPosition.x());
 
         isMoving = true;
     }
@@ -96,9 +122,31 @@ void Ball::updateInfo()
     }
 }
 
+/**
+ * @brief Ball::found
+ * @return
+ */
 bool Ball::found()
 {
-    return (ballPosition.x()>0 && ballPosition.y()>0)
+    return (position.x()>0 && position.y()>0)
             ? true
             : false;
+}
+
+/**
+ * @brief Ball::getMaxColor
+ * @return
+ */
+QColor Ball::getMaxColor()
+{
+    return maxColor;
+}
+
+/**
+ * @brief Ball::getMinColor
+ * @return
+ */
+QColor Ball::getMinColor()
+{
+    return minColor;
 }

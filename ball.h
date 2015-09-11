@@ -13,27 +13,39 @@ class Ball : public QWidget
 public:
     Ball();
     ~Ball();
-    void find(QPoint);
+    void updatePosition(QPoint);
     void updateInfo();
 
     bool isMoving;
     double gradient;
     double distance;
     BallDirection direction;
-    QColor maxColor;
-    QColor minColor;
     QPoint predictPoint;
     QPoint previousPredictPoint;
     bool found();
-    int getX();
-    int getY();
+    QPoint getPosition();
 
     QPoint startPoint;
 
+    void updateColor(int, int, int);
+    void resetColor();
+
+    QColor getMaxColor();
+    QColor getMinColor();
+
 private:
     QQueue<QPoint> ballQueue;
-    QPoint ballPosition;
+    QPoint position;
 
+    int redMax;
+    int redMin;
+    int greenMax;
+    int greenMin;
+    int blueMax;
+    int blueMin;
+
+    QColor maxColor;
+    QColor minColor;
 };
 
 #endif // BALL_H

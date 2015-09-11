@@ -17,7 +17,11 @@ public:
 
     void defense();
     void offense();
+    void sendSerial(QByteArray);
+    void sendSerial(Packet_Major, Packet_Minor);
     QString parsingPositionData(QPoint);
+    void radioStateChanged(RadioState);
+    void calcDirection();
 
 private:
     Ball *ball;
@@ -28,6 +32,7 @@ private:
     bool isObjectsLoaded;
     int beforeY;
     RobotSide robotSide;
+    Packet_Minor robotDirection;
 
 public slots:
     void slotRenewObjects(Ball*, Robot*);

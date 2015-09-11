@@ -10,13 +10,30 @@ class Robot : public QWidget
 public:
     Robot();
     ~Robot();
-    QColor maxColor;
-    QColor minColor;
     int unitX;
     int unitY;
 
+    void updateColor(int, int, int);
+    void resetColor();
+
+    QColor getMaxColor();
+    QColor getMinColor();
+    void updatePosition(QPoint);
+
+    QPoint getPosition();
+
 private:
     QPoint position;
+
+    QColor maxColor;
+    QColor minColor;
+
+    int redMax;
+    int redMin;
+    int greenMax;
+    int greenMin;
+    int blueMax;
+    int blueMin;
 
 public slots:
     void slotRenewPosition(QPoint);
