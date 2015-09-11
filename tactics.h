@@ -27,11 +27,13 @@ private:
     QString portName;
     bool isObjectsLoaded;
     int beforeY;
+    RobotSide robotSide;
 
 public slots:
     void slotRenewObjects(Ball*, Robot*);
     void slotPortNameChanged(QString);
     void slotStartAction();
+    void slotRobotSideChanged(int);
 };
 
 #endif // TACTICS_H

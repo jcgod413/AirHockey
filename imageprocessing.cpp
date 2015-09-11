@@ -149,10 +149,16 @@ void ImageProcessing::getThresholdImage(QImage *dstImage)
     imageData = dstImage->bits();
 
     if( isBoardAreaReady == true )  {
-        for(int i=leftTopPoint.y(); i<rightBottomPoint.y(); i++)  {
-            for(int j=leftTopPoint.x(); j<rightBottomPoint.x(); j++)   {
-                int loc = i*2560 + j*4;
+        int startX = leftTopPoint.x();
+        int startY = leftTopPoint.y();
+        int endX = rightBottomPoint.x();
+        int endY = rightBottomPoint.y();
+        int loc;
 
+        for(int i=startY; i<endY; i++)  {
+            loc = (i<<11) + (i<<9) + (startX<<2);
+
+            for(int j=startX; j<endX; j++)   {
                 unsigned char &blue = imageData[loc];
                 unsigned char &green = imageData[loc+1];
                 unsigned char &red = imageData[loc+2];
@@ -165,6 +171,8 @@ void ImageProcessing::getThresholdImage(QImage *dstImage)
                     green = ballColor->green();
                     blue = ballColor->blue();
                 }
+
+                loc += 4;
             }
         }
     }

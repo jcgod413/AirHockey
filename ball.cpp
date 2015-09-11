@@ -85,7 +85,7 @@ void Ball::updateInfo()
         direction = SOUTH_WEST;
     }
 
-    if( distance > 10 )    {
+    if( distance > 16 )    {
         gradient = (double)(ballPosition.y() - previousBallPosition.y())
                    / (double)(ballPosition.x() - previousBallPosition.x());
 

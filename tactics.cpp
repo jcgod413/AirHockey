@@ -26,28 +26,15 @@ Tactics::~Tactics()
  */
 void Tactics::defense()
 {
-    qDebug("%d %d", ball->getX(), ball->getY());
-
     beforeY = ball->getY() - ball->startPoint.y();
 
-    if( abs(beforeY-ball->getY()) > 10 )    {
+    if( abs(beforeY-ball->getY()) > 16 )    {
         bluetooth->transaction(portName,
                               SERIAL_DELAYTIME,
                               parsingPositionData(QPoint(ball->getX() - ball->startPoint.x(),
                                                          ball->getY() - ball->startPoint.y())));
         beforeY = ball->getY();
     }
-
-    /*
-    if( abs(ball->predictPoint.x() - ball->previousPredictPoint.x())
-         + abs(ball->predictPoint.y() - ball->previousPredictPoint.y()) > 10 )  {
-        bluetooth->transaction(portName,
-                              SERIAL_DELAYTIME,
-                              parsingPositionData(QPoint(ball->getX(),
-                                                         ball->getY())));
-        ball->previousPredictPoint = ball->predictPoint;
-    }
-    */
 }
 
 /**
@@ -64,14 +51,12 @@ void Tactics::offense()
 void Tactics::slotStartAction()
 {
     /* ball not found */
-//    if( ball->found() == false
-//        || isObjectsLoaded == false ) {
-//        return;
-//    }
-
-//    qDebug("%d %d", ball->pos().x(), ball->pos().y());
-
-    defense();
+    if( (robotSide == LEFT_SIDE && (ball->direction == NORTH_WEST
+                                    || ball->direction == SOUTH_WEST))
+        || (robotSide == LEFT_SIDE && (ball->direction == NORTH_WEST
+                                    || ball->direction == SOUTH_WEST)) )   {
+        defense();
+    }
 }
 
 /**
@@ -81,7 +66,6 @@ void Tactics::slotStartAction()
  */
 void Tactics::slotRenewObjects(Ball *ball, Robot *robot)
 {
-    qDebug("slot");
     delete this->ball;
     delete this->robot;
 
@@ -98,6 +82,14 @@ void Tactics::slotRenewObjects(Ball *ball, Robot *robot)
 void Tactics::slotPortNameChanged(QString portName)
 {
     this->portName = portName;
+}
+
+/**
+ * @brief Tactics::slotRobotSideChanged
+ */
+void Tactics::slotRobotSideChanged(int)
+{
+    this->robotSide = (RobotSide)robotSide;
 }
 
 /**

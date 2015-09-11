@@ -54,6 +54,8 @@ void Widget::initWidget()
                                SLOT(slotCameraCapture()));
     connect(ui->robotSideSlider, SIGNAL(valueChanged(int)),
             imageProcessing, SLOT(slotRobotSideChanged(int)));
+    connect(ui->robotSideSlider, SIGNAL(valueChanged(int)),
+            tactics, SLOT(slotRobotSideChanged(int)));
 
     connect(ui->resetColorButton, SIGNAL(clicked()),
             imageProcessing, SLOT(slotResetMaskColor()));
@@ -228,7 +230,7 @@ void Widget::slotCamImageCapture(int pId, QImage pPreview)
 void Widget::slotCaptureLoad()
 {
     QRect rect(0, 0, viewFinder->width(), viewFinder->height());
-    QPixmap captureImage = viewFinder->grab(rect).scaled(640, 480);
+    QPixmap captureImage = viewFinder->grab(rect).scaled(SCREEN_WIDTH, SCREEN_HEIGHT);
     QImage frameImage = captureImage.toImage();
     QImage resultImage = imageProcessing->imageProcess(&frameImage);
 
