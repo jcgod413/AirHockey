@@ -40,7 +40,7 @@ private:
     QPoint robotPos;
     QPoint mousePos;
     QImage rawImage;
-    QImage resultImage;
+    QImage *resultImage;
     RobotSide robotSide;
     RadioState radioState;
 
@@ -62,9 +62,6 @@ private:
     };
 
     bool isBoardAreaReady;
-
-    unsigned char *imageData;
-    unsigned char *rawImageData;
 
     int redMax;
     int redMin;
@@ -101,6 +98,7 @@ signals:
     void signalRectangleReady(bool);
     void signalBoardArea(bool);
     void signalFindBall(QPoint);
+    void signalFindRobot(QPoint);
     void signalRenewBallColor(QColor, QColor);
     void signalRenewObjects(Ball*, Robot*);
     void signalImageProcessCompleted();

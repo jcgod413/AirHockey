@@ -66,27 +66,28 @@ void ImageProcessing::slotSendObjects()
 QImage ImageProcessing::imageProcess(QImage *rawImage)
 {
     this->rawImage = *rawImage;
-    resultImage = *rawImage;
+    resultImage = rawImage;
 
     // threshold
-    getThresholdImage(&resultImage);
+    getThresholdImage(resultImage);
 
     // morpology
     if( enableMorpology == true )   {
         for(int i=0; i<erodeNum; i++)
-            erode(&resultImage);
+            erode(resultImage);
         for(int i=0; i<dilateNum; i++)
-            dilate(&resultImage);
+            dilate(resultImage);
     }
 
     // get objects position
-    getObjectsPosition(&resultImage);
+    getObjectsPosition(resultImage);
     ball->updatePosition(ballPos);
     robot->updatePosition(robotPos);
     emit signalFindBall(ballPos);
+    emit signalFindRobot(robotPos);
 
     // predict
-    predictCourse(&resultImage);
+    predictCourse(resultImage);
 
     // tracking
     ballTracking();
@@ -97,7 +98,7 @@ QImage ImageProcessing::imageProcess(QImage *rawImage)
     // draw fence
     drawFence();
 
-    return resultImage;
+    return *resultImage;
 }
 
 /**
@@ -109,7 +110,7 @@ void ImageProcessing::drawFence()
         && (rightBottomPoint.x() > leftTopPoint.x())
         && (rightBottomPoint.y() > leftTopPoint.y()) )
     {
-        QPainter painter(&resultImage);
+        QPainter painter(resultImage);
         painter.drawRect(QRect(leftTopPoint, rightBottomPoint));
     }
 }
@@ -145,7 +146,7 @@ void ImageProcessing::getThresholdImage(QImage *dstImage)
                     : rightBottomY;
 
     *dstImage = rawImage;
-    imageData = dstImage->bits();
+    unsigned char *imageData = dstImage->bits();
 
     if( isBoardAreaReady == true )  {
         int startX = leftTopPoint.x();
@@ -391,7 +392,8 @@ void ImageProcessing::getObjectsPosition(QImage *frameImage)
     int *groupBall = new int[groupBallNum];
     int *groupRobot = new int[groupBallNum];
 
-    imageData = frameImage->bits();
+    unsigned char *imageData = frameImage->bits();
+
     memset(labelBall, 0, sizeof(labelBall));
     memset(labelRobot, 0, sizeof(labelRobot));
 
@@ -402,7 +404,7 @@ void ImageProcessing::getObjectsPosition(QImage *frameImage)
 
     for(int i=startY; i<endY; i++)    {
         for(int j=startX; j<endX; j++)    {
-            int loc = i*2560 + j*4;
+            unsigned int loc = i*2560 + j*4;
             QColor *color = new QColor(imageData[loc+2],
                                        imageData[loc+1],
                                        imageData[loc],
@@ -445,11 +447,13 @@ void ImageProcessing::getObjectsPosition(QImage *frameImage)
 
                     int *tempGroup = new int[groupBallNum];
                     Outline *tempOutline = new Outline[groupBallNum];
+//                    int *tempGroup = (int*)malloc(sizeof(int)*groupBallNum);
+//                    Outline *tempOutline = (Outline*)malloc(sizeof(Outline)*groupBallNum);
 
                     memcpy(tempGroup, groupBall, sizeof(int)*(groupBallNum-1));
                     memcpy(tempOutline, ballOutline, sizeof(Outline)*(groupBallNum-1));
-                    delete groupBall;
-                    delete ballOutline;
+                    delete(groupBall);
+                    delete(ballOutline);
 
                     groupBall = tempGroup;
                     ballOutline = tempOutline;
@@ -515,6 +519,10 @@ void ImageProcessing::getObjectsPosition(QImage *frameImage)
                     robotOutline[groupRobotNum-1].rightDownSide.setY(i);
                 }
             }
+
+            loc += 4;
+
+            delete color;
         }
     }
 
@@ -526,6 +534,11 @@ void ImageProcessing::getObjectsPosition(QImage *frameImage)
                    + maxRobotOutline.rightDownSide.x()) / 2);
     robotPos.setY((maxRobotOutline.leftUpSide.y()
                    + maxRobotOutline.rightDownSide.y()) / 2);
+
+    delete ballOutline;
+    delete robotOutline;
+    delete groupBall;
+    delete groupRobot;
 }
 
 /**
@@ -548,8 +561,9 @@ void ImageProcessing::erode(QImage *sourceImage)
                     ? leftBottomY
                     : rightBottomY;
 
-    imageData = sourceImage->bits();
-    rawImageData = rawImage.bits();
+
+    unsigned char *imageData = sourceImage->bits();
+    unsigned char *rawImageData = rawImage.bits();
 
     for(int i=boundStartY; i<boundEndY; i++)    {
         int boundStartX;
@@ -633,7 +647,7 @@ void ImageProcessing::dilate(QImage *sourceImage)
                     ? leftBottomY
                     : rightBottomY;
 
-    imageData = sourceImage->bits();
+    unsigned char *imageData = sourceImage->bits();
 
     for(int i=boundStartY; i<boundEndY; i++)    {
         int boundStartX;

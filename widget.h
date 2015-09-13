@@ -58,6 +58,7 @@ public slots:
     void slotUpdateCameraState(QCamera::State state);
     void slotThreadStart();
     void slotFindBall(QPoint);
+    void slotFindRobot(QPoint);
     void slotSendSerial();
 
     void slotRadioBall();

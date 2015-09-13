@@ -71,6 +71,8 @@ void Widget::initWidget()
 
     connect(imageProcessing, SIGNAL(signalFindBall(QPoint)),
             this, SLOT(slotFindBall(QPoint)));
+    connect(imageProcessing, SIGNAL(signalFindRobot(QPoint)),
+            this, SLOT(slotFindRobot(QPoint)));
 
     connect(imageGLView, SIGNAL(signalMouseLeftClick(QPoint)),
             imageProcessing, SLOT(slotMouseClick(QPoint)));
@@ -143,10 +145,11 @@ void Widget::initTestSerial()
 void Widget::slotSendSerial()
 {
     QByteArray packet;
-    packet.append("S")
-            .append("0")
-            .append(ui->serialEditText->text())
-            .append("E");
+    packet.append(ui->serialEditText->text());
+//    packet.append("S")
+//            .append("0")
+//            .append(ui->serialEditText->text())
+//            .append("E");
 
     tactics->sendSerial(packet);
 }
@@ -297,12 +300,34 @@ void Widget::slotFindBall(QPoint ballPosition)
         ballPosText = "Not found";
     }
     else    {
-        ballPosText.append("x : ");
+        ballPosText.append("x:");
         ballPosText.append(ballPosText.number(ballPosition.x()));
-        ballPosText.append("\t");
-        ballPosText.append("y : ");
+        ballPosText.append(" ");
+        ballPosText.append("y:");
         ballPosText.append(ballPosText.number(ballPosition.y()));
     }
 
     ui->ballPosLabel->setText(ballPosText);
+}
+
+/**
+ * @brief Widget::slotFindRobot
+ * @param robotPosition
+ */
+void Widget::slotFindRobot(QPoint robotPosition)
+{
+    QString robotPosText;
+
+    if( robotPosition.x() == 0 && robotPosition.y() == 0 )  {
+        robotPosText = "Not found";
+    }
+    else    {
+        robotPosText.append("x:");
+        robotPosText.append(robotPosText.number(robotPosition.x()));
+        robotPosText.append(" ");
+        robotPosText.append("y:");
+        robotPosText.append(robotPosText.number(robotPosition.y()));
+    }
+
+    ui->robotPosLabel->setText(robotPosText);
 }
