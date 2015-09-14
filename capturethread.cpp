@@ -10,11 +10,19 @@ CaptureThread::CaptureThread() :
 }
 
 /**
- * @brief CaptureThread::~CaptureThread
+ * @brief CaptureThread::run
  */
-CaptureThread::~CaptureThread()
+void CaptureThread::run()
 {
+    cameraTimer.start();
+    isThreadRunning = true;
 
+    while(isThreadRunning)  {
+        if( cameraTimer.elapsed() == TIMEOUT_INTERVAL ) {
+            emit captureReady();
+            cameraTimer.restart();
+        }
+    }
 }
 
 /**
@@ -23,17 +31,4 @@ CaptureThread::~CaptureThread()
 void CaptureThread::stop()
 {
     isThreadRunning = false;
-}
-
-/**
- * @brief CaptureThread::run
- */
-void CaptureThread::run()
-{
-    isThreadRunning = true;
-
-    while(isThreadRunning)  {
-        msleep(30);
-        emit captureReady();
-    }
 }

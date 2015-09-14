@@ -49,6 +49,9 @@ private:
     bool isRectangleReady;
     bool isMouseClick;
 
+    bool isBallDragged;
+    bool isRobotDragged;
+
     int toleranceBand;  // Mask Color 오차 범위
 
     int labelBall[SCREEN_HEIGHT][SCREEN_WIDTH];

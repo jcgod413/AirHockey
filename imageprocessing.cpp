@@ -17,6 +17,8 @@ ImageProcessing::ImageProcessing(QObject *parent) :
     isRectangleReady(false),
     isRectangleBoardMode(false),
     isRectangleGrabbing(false),
+    isBallDragged(false),
+    isRobotDragged(false),
     leftTopX(0),
     leftTopY(0),
     leftBottomX(0),
@@ -163,7 +165,8 @@ void ImageProcessing::getThresholdImage(QImage *dstImage)
                 unsigned char &green = imageData[loc+1];
                 unsigned char &red = imageData[loc+2];
 
-                if( (red <= ball->getMaxColor().red()+toleranceBand && red >= ball->getMinColor().red()-toleranceBand) &&
+                if( isBallDragged == true &&
+                    (red <= ball->getMaxColor().red()+toleranceBand && red >= ball->getMinColor().red()-toleranceBand) &&
                     (green <= ball->getMaxColor().green()+toleranceBand && green >= ball->getMinColor().green()-toleranceBand) &&
                     (blue <= ball->getMaxColor().blue()+toleranceBand && blue >= ball->getMinColor().blue()-toleranceBand) )
                 {
@@ -172,7 +175,8 @@ void ImageProcessing::getThresholdImage(QImage *dstImage)
                     blue = ballSignColor.blue();
                 }
 
-                if( (red <= robot->getMaxColor().red()+toleranceBand && red >= robot->getMinColor().red()-toleranceBand) &&
+                if( isRobotDragged == true &&
+                    (red <= robot->getMaxColor().red()+toleranceBand && red >= robot->getMinColor().red()-toleranceBand) &&
                     (green <= robot->getMaxColor().green()+toleranceBand && green >= robot->getMinColor().green()-toleranceBand) &&
                     (blue <= robot->getMaxColor().blue()+toleranceBand && blue >= robot->getMinColor().blue()-toleranceBand) )
                 {
@@ -317,9 +321,11 @@ void ImageProcessing::slotDraggedImage(int x, int y)
 
     switch(radioState)  {
     case RADIO_BALL:
+        isBallDragged = true;
         ball->updateColor(red, green, blue);
         break;
     case RADIO_ROBOT:
+        isRobotDragged = true;
         robot->updateColor(red, green, blue);
         break;
     }
@@ -332,9 +338,11 @@ void ImageProcessing::slotResetMaskColor()
 {
     switch(radioState)  {
     case RADIO_BALL:
+        isBallDragged = false;
         ball->resetColor();
         break;
     case RADIO_ROBOT:
+        isRobotDragged = false;
         robot->resetColor();
         break;
     }
@@ -410,7 +418,9 @@ void ImageProcessing::getObjectsPosition(QImage *frameImage)
                                        imageData[loc],
                                        255);
 
-            if( *color == ballSignColor && labelBall[i][j] == 0 )
+            if( *color == ballSignColor
+                && labelBall[i][j] == 0
+                && isBallDragged == true )
             {
                 bool isBallGroupAdjacent = false;
 

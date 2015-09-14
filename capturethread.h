@@ -2,17 +2,19 @@
 #define CAPTURETHREAD_H
 
 #include <QThread>
+#include <QElapsedTimer>
+#include "ahr.h"
 
 class CaptureThread : public QThread
 {
     Q_OBJECT
 public:
     explicit CaptureThread();
-    ~CaptureThread();
     void run();
     void stop();
 
 private:
+    QElapsedTimer cameraTimer;
     bool isThreadRunning;
 
 signals:
