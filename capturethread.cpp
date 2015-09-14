@@ -18,7 +18,7 @@ void CaptureThread::run()
     isThreadRunning = true;
 
     while(isThreadRunning)  {
-        if( cameraTimer.elapsed() == TIMEOUT_INTERVAL ) {
+        if( cameraTimer.elapsed() >= TIMEOUT_INTERVAL ) {
             emit captureReady();
             cameraTimer.restart();
         }
